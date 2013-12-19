@@ -23,7 +23,7 @@
 
 */
 
-// How many frames it survivedasdasd 
+// How many frames it survived
 typedef struct{
 	int frames;
 } Age;
