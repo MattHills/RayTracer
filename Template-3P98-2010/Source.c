@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <freeglut.h>
-#include <FreeImage.h>
 #include <time.h>
 #include <math.h>
 
@@ -83,11 +82,11 @@ typedef struct Particle {
 	struct Particle *next;
 } Particle;
 
-//typedef struct{
-//	Particle *p;
-//	size_t size;
-//	size_t used;
-//} PartlicleList;
+//the global structure
+typedef struct {
+	Particle dude;
+} glob;
+glob global;
 
 
 // Global Variables
@@ -755,6 +754,25 @@ void keyboard(unsigned char key, int x, int y) {
 			setSpray();
 			break;
    }
+}
+
+void readFile(){
+	FILE *file;
+
+	file = fopen("raydetails.txt","r");
+
+	if(file == NULL){
+		printf("Error when opening file");
+	}
+	else{
+		while(!feof(file)){
+			
+		}
+	}
+	
+
+
+
 }
 
 
