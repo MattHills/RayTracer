@@ -14,3 +14,4 @@ colour r:
 colour g:
 colour b:
 transparency:
+use -55 after your shape definition for your assistance

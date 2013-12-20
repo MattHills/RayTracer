@@ -74,7 +74,7 @@ typedef struct Donut {
 typedef struct Plane {
 	Position pos;
 	Size siz;
-	Angle ang
+	Angle ang;
 	Colour col;
 	Transparency trans;
 	struct Plane *next;
@@ -91,14 +91,14 @@ typedef struct Sphere {
 } Sphere;
 
 // Rectangle shape
-typedef struct Rectangle {
+typedef struct Rect {
 	Position pos;	
 	Size siz;
 	Angle ang;
 	Colour col;
 	Transparency trans;
-	struct Rectangle *next;
-} Rectangle;
+	struct Rect *next;
+} Rect;
 
 // Cylinder shape
 typedef struct Cylinder{
@@ -123,7 +123,7 @@ typedef struct Triangle {
 //the global structure
 typedef struct {
 	struct Cylinder *cyl;
-	struct Rectangle *rec;
+	struct Rect *rec;
 	struct Sphere *sph;
 	struct Plane *pla;
 	struct Donut *don;
@@ -133,140 +133,6 @@ glob global;
 int screenWidth;	// size * cellSize
 
 void redraw(){
-	int i;
-	Particle* p;
-	double size;
-
-	p = headParticle;
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glMatrixMode(GL_MODELVIEW);
-	if(culling == 1){
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-	}
-	else{
-		glDisable(GL_CULL_FACE);
-	}
-
-	if(colourMode == 0){
-		glColor3f(1.0,1.0,1.0);
-	}
-	if(p != 0 && p->sta.alive == 0){
-		headState = deleteHeadParticle();
-		p = headParticle;
-	}
-	while(p && headState == 1){
-		//printf("%d \n", p.pos.y);
-		moveParticle(p);
-		//p = particles.p[i];
-		detectCollision(p);
-		glPushMatrix();		
-		// Move particle
-		glTranslatef(p->pos.x, p->pos.y, p->pos.z);
-		if(rotate == 1){
-			glRotatef(p->rot.angle,p->rot.xAxis,p->rot.yAxis,p->rot.zAxis);
-		}
-		
-		if(colourMode == 1){
-			glColor3f(p->col.r,p->col.g,p->col.b);
-		}
-
-		if(randSize == 1){
-			size = p->sca.scale;
-		}
-		else{
-			size = 5;
-		}
-		if(viewMode == 0){
-			glutSolidCube(size);
-		}
-		else if(viewMode == 1){
-			glutWireCube(size);
-		}
-		else{
-			glBegin( GL_POINTS);
-				glVertex3f(p->pos.x, p->pos.y, p->pos.z);
-			glEnd();
-		}
-		glPopMatrix();		
-		// Check if next particle is alive before selecting it
-		if(p->next !=0 && p->next->sta.alive == 0){
-			deleteParticle(p);
-		}		
-		p = p->next;
-	}
-	free(p);
-	  
-	glColor3f(0.,0.0,1.0);
-	if(viewMode == 0){
-		glBegin(GL_QUADS);
-			glVertex3f(-PLANE_SIZE, 0 , PLANE_SIZE);
-			glVertex3f(PLANE_SIZE, 0 , PLANE_SIZE);
-			glVertex3f(PLANE_SIZE, 0 , -PLANE_SIZE);
-			glVertex3f(-PLANE_SIZE, 0 , -PLANE_SIZE);			
-		glEnd();
-	}
-	else{
-		glBegin(GL_LINES);
-			glVertex3f(PLANE_SIZE, 0, PLANE_SIZE);
-			glVertex3f(PLANE_SIZE, 0, -PLANE_SIZE);
-			glVertex3f(PLANE_SIZE, 0, -PLANE_SIZE);
-			glVertex3f(-PLANE_SIZE, 0, -PLANE_SIZE);
-			glVertex3f(-PLANE_SIZE, 0, -PLANE_SIZE);
-			glVertex3f(-PLANE_SIZE, 0, PLANE_SIZE);
-			glVertex3f(-PLANE_SIZE, 0, PLANE_SIZE);
-			glVertex3f(PLANE_SIZE, 0, PLANE_SIZE);
-		glEnd();
-	}
-	if(viewMode == 0){
-		glColor3f(0.0,0.0,0.0);
-		glBegin(GL_QUADS);
-			glVertex3f(HOLE_MAX, 1 , HOLE_MIN);
-			glVertex3f(HOLE_MIN, 1 , HOLE_MIN);
-			glVertex3f(HOLE_MIN, 1 , HOLE_MAX);
-			glVertex3f(HOLE_MAX, 1 , HOLE_MAX);			
-		glEnd();
-	}
-	else{
-		glColor3f(0.0,1.0,0.0);
-		glBegin(GL_LINES);
-			glVertex3f(HOLE_MAX, 1 , HOLE_MAX);
-			glVertex3f(HOLE_MAX, 1 , HOLE_MIN);
-			glVertex3f(HOLE_MAX, 1 , HOLE_MIN);
-			glVertex3f(HOLE_MIN, 1 , HOLE_MIN);
-			glVertex3f(HOLE_MIN, 1 , HOLE_MIN);
-			glVertex3f(HOLE_MIN, 1 , HOLE_MAX);
-			glVertex3f(HOLE_MIN, 1 , HOLE_MAX);
-			glVertex3f(HOLE_MAX, 1 , HOLE_MAX);
-		glEnd();
-	}
-
-	glPushMatrix();
-	glRotatef(270,1,0,0);
-	glColor3f(0.5,0.5,0.5);
-	if(viewMode == 0){		
-		gluCylinder(gluNewQuadric(),5,5,40,40,40);		
-	}
-	else{
-		glutWireCylinder(5,40,5,5);
-	}
-	
-	glPopMatrix();	
-
-	if(spinAxis == 0){
-		glRotatef(angle, 0.0, 0.0, 1.0);
-	}
-	else if(spinAxis == 1){
-		glRotatef(angle, 1.0, 0.0, 0.0);
-	}
-	else if(spinAxis == 2){
-		glRotatef(angle, 0.0, 1.0, 0.0);
-	}
-	
-	glFlush();
-	glutSwapBuffers();
-	
 
 }
 
@@ -279,16 +145,6 @@ void reshape(int x, int y) {
 
 // Resets the screen, not very well though
 void reset(){
-	fireMode = 0;
-	rotate = 0;
-	friction = 0;
-	viewMode = 0;
-	spinAxis = 2;
-	culling = 0;
-	particleSpeed = 0;
-	colourMode = 0;
-	randSize = 0;
-	angle = 0;
 	glPopMatrix();
 	glPushMatrix();
 }
@@ -302,93 +158,82 @@ void keyboard(unsigned char key, int x, int y) {
 		case 'Q':
 			exit(0);
 			break;
-		case 'p':
-		case 'P':
-			setViewPoly();
-			break;
-		case 'o':
-		case 'O':
-			setWireFrame();
-			break;
-		case 'i':
-		case 'I':
-			setPoints();
-			break;
-		case 'a':
-		case 'A':
-			 toggleFireMode();
-			break;
-		case 'r':
-		case 'R':
-			reset();
-			break;
-		case 's':
-		case 'S':			
-			setSpeed();
-			break;
-		case 'b':
-		case 'B':
-			toggleRotate();
-			break;
-		case 'n':
-		case 'N':
-			toggleFriction();
-			break;
-		case 'f':
-		case 'F':
-			toggleFireMode();
-			break;
-		case 'z':
-		case 'Z':
-			setSpin(0);
-			break;
-		case 'x':
-		case 'X':
-			setSpin(1);
-			break;
-		case 'y':
-		case 'Y':
-			setSpin(2);
-			break;
-		case 'c':
-		case 'C':
-			toggleCulling();
-			break;
-		case 'v':
-		case 'V':
-			toggleColours();
-			break;
-		case 'd':
-		case 'D':
-			toggleSize();
-			break;
-		case 'u':
-		case 'U':
-			setSpray();
-			break;
    }
 }
 
 void readFile(){
 	FILE *file;
-	int i;
+	float i;
 	Sphere s;
 
+	//file = fopen("C:\3P98\3P98 Final Project\Ray Tracer\RayTracer\raydetails.txt","r");
 	file = fopen("raydetails.txt","r");
 
-	if(file == NULL){
+	if(!file){
 		printf("Error when opening file");
 	}
 	else{
-		fscanf(file, "%d", &i);
+		fscanf(file, "%f", &i);
 		while(!feof(file)){
-			printf("%d",i);
-			fscanf(file, "%d", &i);
+			if(i == 0){
+				fscanf(file, "%f", &i);
+				s.pos.x = i;
+				fscanf(file, "%f", &i);
+				s.pos.y = i;
+				fscanf(file, "%f", &i);
+				s.pos.z = i;
+				fscanf(file, "%f", &i);
+				s.rad.totalRadius = i;				
+				s.ang.x = 0;
+				s.ang.y = 0;
+				s.ang.z = 0;
+				fscanf(file, "%f", &i);
+				s.col.r = i;
+				fscanf(file, "%f", &i);
+				s.col.b = i;
+				fscanf(file, "%f", &i);
+				s.col.g = i;
+				fscanf(file, "%f", &i);
+				s.trans.val = i;
+				s.next = (Sphere*)malloc(sizeof (struct Sphere));
+
+				if(!global.sph){
+					global.sph = (Sphere*)malloc(sizeof (struct Sphere));
+					global.sph = &s;
+				}
+				else{
+					s.next = global.sph;
+					global.sph = &s;
+				}
+			}
+			fscanf(file, "%f", &i);
 		}
-	}
-	fclose(file);
+		fclose(file);
+	}	
+}
+
+/*
+ray details sheet
+type: 
+x pos:
+y pos:
+z pos:
+width:
+height:
+depth:
+radius:
+angle x:
+angle y:
+angle z:
+colour r:
+colour g:
+colour b:
+transparency:
 
 
+*/
+
+void drawShapes(){
 
 }
 
@@ -403,11 +248,9 @@ main(int argc, char **argv)
     glutInitWindowSize(screenWidth, screenWidth);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	
-    glutCreateWindow("Particle Fountain");
+    glutCreateWindow("Ray Tracer");
 
-    glutMouseFunc(mouse);
     glutKeyboardFunc(keyboard);
-	glutKeyboardUpFunc(keyBoardUp);
     glutDisplayFunc(redraw);
 	glutIdleFunc(redraw);
     glutReshapeFunc(reshape);
@@ -426,7 +269,9 @@ main(int argc, char **argv)
 
 	glPushMatrix();
 
-	autoFireParticles(0);
+	readFile();
+
+	drawShapes();
 
     glutMainLoop();
 	
