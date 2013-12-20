@@ -1,0 +1,16 @@
+ray details sheet
+type: 
+x pos:
+y pos:
+z pos:
+width:
+height:
+depth:
+radius:
+angle x:
+angle y:
+angle z:
+colour r:
+colour g:
+colour b:
+transparency:
