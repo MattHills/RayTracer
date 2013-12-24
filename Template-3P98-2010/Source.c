@@ -236,6 +236,54 @@ void readFile(){
 	}	
 }
 
+
+//Vector functions
+
+double magnitude (Vector v){
+	return (sqrt((v.x*v.x) + (v.y*v.y) + (v.z*v.z)));
+}//returns magnitude of a vector
+
+Vector normalize (Vector v){
+	v.x = v.x/magnitude(v);
+	v.y = v.y/magnitude(v);
+	v.z = v.z/magnitude(v);
+	return v;
+}//normalize a vector
+
+Vector negative (Vector v){
+	v.x = -v.x;
+	v.y = -v.y;
+	v.z = -v.z;
+	return v;
+}//negative of a vector
+
+double dotProduct(Vector v, Vector c){
+	return (v.x*c.x + v.y*c.y + v.z*c.z);
+}//dotProdcut of two vectors v and c
+
+Vector crossProd(Vector v, Vector c){
+	v.x = (v.y*c.z-v.z*c.y);
+	v.y = (v.z*c.x-v.x*c.z);
+	v.z = (v.x*c.y-v.y*c.x);
+	return v;
+}//returns the cross prod of two vectors
+
+
+void addVectors(Vector v, Vector c){
+	v.x = v.x+c.x;
+	v.y = v.y+c.y;
+	v.z = v.z+c.z;
+}//addtion of vector v and c
+//sets Vector v's coord to the new vector created
+
+void multVectors(Vector v, double scalar){
+	v.x = v.x*scalar;
+	v.y = v.y*scalar;
+	v.z = v.z*scalar;
+}//multiple of vector v and scalar value
+//sets Vector v's coord to the new vector created
+
+
 /*
 ray details sheet
 type: 
@@ -268,16 +316,21 @@ main(int argc, char **argv)
 	//Ray declaration stuff
 	int i,j;
 	int x,y,z;
+	Camera camera;
 	Vector X,Y,Z;
 	Vector look_at;
 	Vector diff_btw;
-	Camera camera;
+	Vector camdir;
+	Vector camright;
+	Vector camdown;
+	
 
 	Color white;
 	Color green;
 	Color black;
 
 	Vector light_pos;
+	Vector campos;
 	Light scene_light;
 
 
@@ -327,19 +380,31 @@ main(int argc, char **argv)
 
 	//campos (3,.5,-4) above y plane
 
+	campos.x = 3;
+	campos.y = 1.5;
+	campos.z = -4;
 
 	look_at.x = 0;
 	look_at.y = 0;
 	look_at.z = 0;
 
-	//diff_btw.x = camera.campos.x-look_at.x;
-	//diff_btw.y = camera.campos.y-look_at.y;
-	//diff_btw.z = camera.campos.z-look_at.z;
+	diff_btw.x = campos.x-look_at.x;
+	diff_btw.y = campos.y-look_at.y;
+	diff_btw.z = campos.z-look_at.z;
 
 	//camdir is diff_btw neg.normalize
 	//camright y.crossprod(camdir).normalize
 	//camdown camright.crossprod(camdir)
 	//camera scene cam (campos, cam dir, right, camdown)
+
+	camdir = normalize(negative(diff_btw));
+	camright = normalize(crossProd(camdir,Y));
+	camdown = crossProd(camdir,camright);
+
+	camera.campos = campos;
+	camera.camdown = camdir;
+	camera.camright = camright;
+	camera.campdir = camdir;
 
 
 	light_pos.x = -7;
