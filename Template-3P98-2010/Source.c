@@ -143,6 +143,17 @@ typedef struct Camera{
 	struct Vector camdown;
 } Camera;
 
+typedef struct Color {
+	float r;
+	float g;
+	float b;
+} Color;
+
+typedef struct Light{
+	struct Color c;//color
+	struct Vector v;//position
+} Light;
+
 int screenWidth;	// size * cellSize
 
 void redraw(){
@@ -258,6 +269,16 @@ main(int argc, char **argv)
 	int i,j;
 	int x,y,z;
 	Vector X,Y,Z;
+	Vector look_at;
+	Vector diff_btw;
+	Camera camera;
+
+	Color white;
+	Color green;
+	Color black;
+
+	Vector light_pos;
+	Light scene_light;
 
 
 	// Initialize game settings
@@ -290,9 +311,7 @@ main(int argc, char **argv)
 	glPushMatrix();
 
 
-	//Ray stuff
-
-	
+	//Ray stuff	
 
 	X.x = 1;
 	X.y = 0;
@@ -305,6 +324,46 @@ main(int argc, char **argv)
 	Z.x = 0;
 	Z.y = 0;
 	Z.z = 1;
+
+	//campos (3,.5,-4) above y plane
+
+
+	look_at.x = 0;
+	look_at.y = 0;
+	look_at.z = 0;
+
+	//diff_btw.x = camera.campos.x-look_at.x;
+	//diff_btw.y = camera.campos.y-look_at.y;
+	//diff_btw.z = camera.campos.z-look_at.z;
+
+	//camdir is diff_btw neg.normalize
+	//camright y.crossprod(camdir).normalize
+	//camdown camright.crossprod(camdir)
+	//camera scene cam (campos, cam dir, right, camdown)
+
+
+	light_pos.x = -7;
+	light_pos.y = 10;
+	light_pos.z = -10;
+
+
+	//Basic Light declarations
+	white.r = 1.0;
+	white.g = 1.0;
+	white.b = 1.0;
+
+	green.r = 0.5;
+	green.g = 1.0;
+	green.b = 0.5;
+
+	black.r = 0.0;
+	black.g = 0.0;
+	black.b = 0.0;
+
+
+	//Scene light is white with vector or position
+	scene_light.c = white;
+	scene_light.v = light_pos;
 
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
