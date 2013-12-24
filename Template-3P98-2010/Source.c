@@ -1,12 +1,3 @@
-/*	Matt Hills
-	mh09wq
-	4640512
-	Friday, November 8, 2013
-	COSC 3P98
-	Assignment 2 Question 1 and 4
-	2D Convex Hull, MST
-*/
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <malloc.h>
@@ -14,13 +5,7 @@
 #include <time.h>
 #include <math.h>
 
-/*	This program allows you to see the convex hull of points on the screen as well as the hull peel for the points and the minimum spanning tree for the points.
-	The mouse input works, but looses precision the on the screen. This was a problem multiple people had, and we were unsure why.
-	I would restart the program everytime you run. Or randomize it after every command you click.
-
-	The MST has 1 point that cycles, I could not find out why/where that error is. I believe it is in my sorting algorithm and not my MST algorithm.
-
-*/
+#define MAX_RAY_DEPTH 3
 
 typedef struct {
 	float val;
@@ -129,6 +114,34 @@ typedef struct {
 	struct Donut *don;
 } glob;
 glob global;
+
+
+typedef struct Vector {
+	//Vector values
+	//still need to normalize
+   float x, y, z;
+   float magnitude;
+   float normalize;
+}Vector;
+
+//mag (sqrt((x*x) + (y*y) + (z*z))
+//normalize = 
+//invert negative -x,-y,-z
+//dotproduct (vector v) return 
+//crossproduct
+
+typedef struct Ray{
+	struct Vector origin;
+	struct Vector direction;
+} Ray;
+
+typedef struct Camera{
+	//Coord for scene for perspective
+	struct Vector campos;
+	struct Vector campdir;
+	struct Vector camright;
+	struct Vector camdown;
+} Camera;
 
 int screenWidth;	// size * cellSize
 
@@ -240,6 +253,13 @@ void drawShapes(){
 
 main(int argc, char **argv)
 {
+
+	//Ray declaration stuff
+	int i,j;
+	int x,y,z;
+	Vector X,Y,Z;
+
+
 	// Initialize game settings
 	screenWidth = 500;	
 	
@@ -269,10 +289,38 @@ main(int argc, char **argv)
 
 	glPushMatrix();
 
-	readFile();
 
-	drawShapes();
+	//Ray stuff
 
+	
+
+	X.x = 1;
+	X.y = 0;
+	X.z = 0;
+
+	Y.x = 0;
+	Y.y = 1;
+	Y.z = 0;
+	
+	Z.x = 0;
+	Z.y = 0;
+	Z.z = 1;
+
+	for (i = 0;i<screenWidth;i++){
+		for (j = 0;j<screenWidth;j++){		
+			//direction of ray
+			
+		}
+	}
+
+
+
+	//
+
+
+
+	//readFile();
+	//drawShapes();
     glutMainLoop();
 	
 
