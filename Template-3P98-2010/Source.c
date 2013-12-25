@@ -56,24 +56,24 @@ typedef struct Donut {
 } Donut;
 
 // Plane shape
-typedef struct Plane {
+/*typedef struct Plane {
 	Position pos;
 	Size siz;
 	Angle ang;
 	Colour col;
 	Transparency trans;
 	struct Plane *next;
-} Plane;
+} Plane;*/
 
 // Sphere shape
-typedef struct Sphere {
+/*typedef struct Sphere {
 	Position pos;	
 	Radius rad;
 	Angle ang;
 	Colour col;
 	Transparency trans;
 	struct Sphere *next;
-} Sphere;
+} Sphere;*/
 
 // Rectangle shape
 typedef struct Rect {
@@ -154,6 +154,24 @@ typedef struct Light{
 	struct Vector v;//position
 } Light;
 
+typedef struct Sphere{
+	Vector center;
+	double radius;
+	Color color;
+} Sphere;
+
+typedef struct Object{
+	Color color;
+	double findIntersection;
+} Object;
+
+typedef struct Plane{
+	Vector normal;
+	double distance;
+	Color color;
+}Plane;
+
+
 int screenWidth;	// size * cellSize
 
 void redraw(){
@@ -185,7 +203,7 @@ void keyboard(unsigned char key, int x, int y) {
    }
 }
 
-void readFile(){
+/*void readFile(){
 	FILE *file;
 	float i;
 	Sphere s;
@@ -234,7 +252,7 @@ void readFile(){
 		}
 		fclose(file);
 	}	
-}
+}*/
 
 
 //Vector functions
@@ -283,6 +301,30 @@ void multVectors(Vector v, double scalar){
 }//multiple of vector v and scalar value
 //sets Vector v's coord to the new vector created
 
+//Plane intersection
+
+double findIntersection(Ray ray,Plane p){
+	Vector ray_direction = ray.direction;
+
+	double a = dotProduct(ray_direction,p.normal);
+
+	if (a == 0){
+	//ray is parrallel to plane
+		return -1;
+	}else{
+		Vector temp;
+		Vector temp2;
+		double b;
+		temp = ray.origin;
+		temp2 = p.normal;
+		multVectors(temp2,p.distance);
+		temp2 = negative(temp2);
+		addVectors(temp, temp2);
+		b = dotProduct(p.normal,temp);
+		return -1*b/a;
+	}
+}
+
 
 /*
 ray details sheet
@@ -323,11 +365,14 @@ main(int argc, char **argv)
 	Vector camdir;
 	Vector camright;
 	Vector camdown;
-	
+	Vector originVec;
+	Sphere sphere;
+	Plane plane;	
 
 	Color white;
 	Color green;
 	Color black;
+	Color planeColor;
 
 	Vector light_pos;
 	Vector campos;
@@ -425,6 +470,25 @@ main(int argc, char **argv)
 	black.g = 0.0;
 	black.b = 0.0;
 
+	planeColor.r = 0.5;
+	planeColor.g = 0.25;
+	planeColor.b = 0.25;
+
+	//Sphere sphere is a sphere
+
+	originVec.x = 0;
+	originVec.y = 0;
+	originVec.z = 0;
+
+	sphere.center = originVec;
+	sphere.radius = 1;
+	sphere.color = green;
+
+	//Plane stuff
+
+	plane.normal = Y;
+	plane.distance = -1;
+	plane.color = planeColor;
 
 	//Scene light is white with vector or position
 	scene_light.c = white;
