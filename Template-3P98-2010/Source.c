@@ -269,10 +269,11 @@ Vector normalize (Vector v){
 }//normalize a vector
 
 Vector negative (Vector v){
-	v.x = -v.x;
-	v.y = -v.y;
-	v.z = -v.z;
-	return v;
+	Vector temp;
+	temp.x = -v.x;
+	temp.y = -v.y;
+	temp.z = -v.z;
+	return temp;
 }//negative of a vector
 
 double dotProduct(Vector v, Vector c){
@@ -280,26 +281,45 @@ double dotProduct(Vector v, Vector c){
 }//dotProdcut of two vectors v and c
 
 Vector crossProd(Vector v, Vector c){
-	v.x = (v.y*c.z-v.z*c.y);
-	v.y = (v.z*c.x-v.x*c.z);
-	v.z = (v.x*c.y-v.y*c.x);
-	return v;
+	Vector temp;
+	temp.x = (v.y*c.z-v.z*c.y);
+	temp.y = (v.z*c.x-v.x*c.z);
+	temp.z = (v.x*c.y-v.y*c.x);
+	return temp;
 }//returns the cross prod of two vectors
 
 
-void addVectors(Vector v, Vector c){
+/*void addVectors(Vector v, Vector c){
 	v.x = v.x+c.x;
 	v.y = v.y+c.y;
 	v.z = v.z+c.z;
-}//addtion of vector v and c
+}*/
+//addtion of vector v and c
 //sets Vector v's coord to the new vector created
+Vector addVectors(Vector v, Vector c){
+	Vector temp;
+	temp.x = v.x+c.x;
+	temp.y = v.y+c.y;
+	temp.z = v.z+c.z;
+	return temp;
+}
 
-void multVectors(Vector v, double scalar){
+
+/*void multVectors(Vector v, double scalar){
 	v.x = v.x*scalar;
 	v.y = v.y*scalar;
 	v.z = v.z*scalar;
-}//multiple of vector v and scalar value
+}*/
+//multiple of vector v and scalar value
 //sets Vector v's coord to the new vector created
+
+Vector multVectors(Vector v, double scalar){
+	Vector temp;
+	temp.x = v.x*scalar;
+	temp.y = v.y*scalar;
+	temp.z = v.z*scalar;
+	return temp;
+}
 
 //Plane intersection
 
@@ -314,11 +334,12 @@ double findIntersection(Ray ray,Plane p){
 	}else{
 		Vector temp;
 		Vector temp2;
+		Vector temp3;
 		double b;
 		temp = ray.origin;
 		temp2 = p.normal;
-		multVectors(temp2,p.distance);
-		temp2 = negative(temp2);
+		temp3 = multVectors(temp2,p.distance);
+		temp2 = negative(temp3);
 		addVectors(temp, temp2);
 		b = dotProduct(p.normal,temp);
 		return -1*b/a;
@@ -358,6 +379,9 @@ main(int argc, char **argv)
 	//Ray declaration stuff
 	int i,j;
 	int x,y,z;
+	double aspectratio;
+	double xamount;
+	double yamount;
 	Camera camera;
 	Vector X,Y,Z;
 	Vector look_at;
@@ -368,6 +392,15 @@ main(int argc, char **argv)
 	Vector originVec;
 	Sphere sphere;
 	Plane plane;	
+	Vector cam_ray_origin;
+	Vector cam_ray_direction;
+	Ray camera_ray;
+
+	//temp vectors
+
+	Vector innerTemp;
+	Vector innerTemp2;
+	Vector innerTemp3;
 
 	Color white;
 	Color green;
@@ -378,6 +411,35 @@ main(int argc, char **argv)
 	Vector campos;
 	Light scene_light;
 
+
+	//TESTING DELETE ME
+
+	Vector vecTest1;
+	Vector vecTest2;
+	Vector test;
+
+	vecTest1.x = 1;
+	vecTest1.y = 2;
+	vecTest1.z = 3;
+
+	vecTest2.x = 4;
+	vecTest2.y = 9;
+	vecTest2.z = 3;
+
+	printf("This is Vector val x %f",vecTest1.x);
+	printf("This is Vector val y %f",vecTest1.y);
+	printf("This is Vector val z %f",vecTest1.z);
+
+	test = addVectors(vecTest1,vecTest2);
+
+	printf("AFTER\n");
+
+	printf("This is Vector val x %f",test.x);
+	printf("This is Vector val y %f",test.y);
+	printf("This is Vector val z %f",test.z);
+
+
+	//END TEST
 
 	// Initialize game settings
 	screenWidth = 500;	
@@ -494,10 +556,33 @@ main(int argc, char **argv)
 	scene_light.c = white;
 	scene_light.v = light_pos;
 
+	aspectratio = (double)screenWidth/(double)screenWidth;
+
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
 			//direction of ray
-			
+			//image is square
+			xamount = (i+0.5)/screenWidth;
+			yamount = ((screenWidth - j)+0.5)/screenWidth;
+			cam_ray_origin = camera.campos;
+			//cam_ray_direction = camdir
+			innerTemp3 = camright;
+			multVectors(innerTemp3,(xamount-0.5));
+			innerTemp = camdir;
+			addVectors(innerTemp, innerTemp3);
+
+			innerTemp2 = camdown;
+			multVectors(innerTemp2,(yamount-0.5));
+
+			innerTemp2 = normalize(innerTemp2);
+
+			addVectors(innerTemp, innerTemp2);
+
+			camera_ray.origin = cam_ray_origin;
+
+			camera_ray.direction = innerTemp;
+
+
 		}
 	}
 
