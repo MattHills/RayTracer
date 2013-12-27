@@ -47,6 +47,7 @@ typedef struct {
 
 // Torus shape
 typedef struct Donut {
+	int id;
 	Position pos;
 	Radius rad;
 	Angle ang;
@@ -57,6 +58,7 @@ typedef struct Donut {
 
 // Plane shape
 /*typedef struct Plane {
+	int id;
 	Position pos;
 	Size siz;
 	Angle ang;
@@ -67,6 +69,7 @@ typedef struct Donut {
 
 // Sphere shape
 /*typedef struct Sphere {
+	int id;
 	Position pos;	
 	Radius rad;
 	Angle ang;
@@ -77,6 +80,7 @@ typedef struct Donut {
 
 // Rectangle shape
 typedef struct Rect {
+	int id;
 	Position pos;	
 	Size siz;
 	Angle ang;
@@ -87,6 +91,7 @@ typedef struct Rect {
 
 // Cylinder shape
 typedef struct Cylinder{
+	int id;
 	Position pos;	
 	Size size;
 	Radius rad;	
@@ -97,6 +102,7 @@ typedef struct Cylinder{
 } Cylinder;
 
 typedef struct Triangle {
+	int id;
 	Position pos;
 	Size size;
 	Angle ang;
