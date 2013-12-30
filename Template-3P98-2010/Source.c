@@ -541,7 +541,7 @@ main(int argc, char **argv)
 
 	campos.x = 3;
 	campos.y = 1.5;
-	campos.z = -4;
+	campos.z = -10;
 
 	look_at.x = 0;
 	look_at.y = 0;
