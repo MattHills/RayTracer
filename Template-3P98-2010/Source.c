@@ -601,7 +601,7 @@ main(int argc, char **argv)
 	readFile();
 
 	aspectratio = (double)screenWidth/(double)screenWidth;
-	printf("%f",global.sph->pos.y);
+
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
 			double intersectionT;
@@ -691,11 +691,11 @@ main(int argc, char **argv)
 				raySphereIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
 
 				printf("\n");
-				printf("raySphereInterscetion.x %d",raySphereIntersection.x);
+				printf("raySphereInterscetion.x %f",raySphereIntersection.x);
 				printf("\n");
-				printf("raySphereInterscetion.y %d",raySphereIntersection.y);
+				printf("raySphereInterscetion.y %f",raySphereIntersection.y);
 				printf("\n");
-				printf("raySphereInterscetion.z %d",raySphereIntersection.z);
+				printf("raySphereInterscetion.z %f",raySphereIntersection.z);
 				printf("\n");
 			}
 			//printf("\n");
