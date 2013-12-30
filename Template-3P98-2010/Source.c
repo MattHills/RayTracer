@@ -57,7 +57,7 @@ typedef struct Donut {
 } Donut;
 
 // Plane shape
-/*typedef struct Plane {
+typedef struct Plane {
 	int id;
 	Position pos;
 	Size siz;
@@ -65,10 +65,10 @@ typedef struct Donut {
 	Colour col;
 	Transparency trans;
 	struct Plane *next;
-} Plane;*/
+} Plane;
 
 // Sphere shape
-/*typedef struct Sphere {
+typedef struct Sphere {
 	int id;
 	Position pos;	
 	Radius rad;
@@ -76,7 +76,7 @@ typedef struct Donut {
 	Colour col;
 	Transparency trans;
 	struct Sphere *next;
-} Sphere;*/
+} Sphere;
 
 // Rectangle shape
 typedef struct Rect {
@@ -160,22 +160,10 @@ typedef struct Light{
 	struct Vector v;//position
 } Light;
 
-typedef struct Sphere{
-	Vector center;
-	double radius;
-	Color color;
-} Sphere;
-
 typedef struct Object{
 	Color color;
 	double findIntersection;
 } Object;
-
-typedef struct Plane{
-	Vector normal;
-	double distance;
-	Color color;
-}Plane;
 
 
 int screenWidth;	// size * cellSize
@@ -209,10 +197,10 @@ void keyboard(unsigned char key, int x, int y) {
    }
 }
 
-/*void readFile(){
+void readFile(){
 	FILE *file;
 	float i;
-	Sphere s;
+	Sphere *s;
 
 	//file = fopen("C:\3P98\3P98 Final Project\Ray Tracer\RayTracer\raydetails.txt","r");
 	file = fopen("raydetails.txt","r");
@@ -224,41 +212,43 @@ void keyboard(unsigned char key, int x, int y) {
 		fscanf(file, "%f", &i);
 		while(!feof(file)){
 			if(i == 0){
+				s = (Sphere*)malloc(sizeof (struct Sphere));
 				fscanf(file, "%f", &i);
-				s.pos.x = i;
+				s->pos.x = i;
 				fscanf(file, "%f", &i);
-				s.pos.y = i;
+				s->pos.y = i;
 				fscanf(file, "%f", &i);
-				s.pos.z = i;
+				s->pos.z = i;
 				fscanf(file, "%f", &i);
-				s.rad.totalRadius = i;				
-				s.ang.x = 0;
-				s.ang.y = 0;
-				s.ang.z = 0;
+				s->rad.totalRadius = i;				
+				s->ang.x = 0;
+				s->ang.y = 0;
+				s->ang.z = 0;
 				fscanf(file, "%f", &i);
-				s.col.r = i;
+				s->col.r = i;
 				fscanf(file, "%f", &i);
-				s.col.b = i;
+				s->col.b = i;
 				fscanf(file, "%f", &i);
-				s.col.g = i;
+				s->col.g = i;
 				fscanf(file, "%f", &i);
-				s.trans.val = i;
-				s.next = (Sphere*)malloc(sizeof (struct Sphere));
+				s->trans.val = i;
+				s->next = (Sphere*)malloc(sizeof (struct Sphere));
 
 				if(!global.sph){
 					global.sph = (Sphere*)malloc(sizeof (struct Sphere));
-					global.sph = &s;
+					global.sph = s;
 				}
 				else{
-					s.next = global.sph;
-					global.sph = &s;
+					s->next = global.sph;
+					global.sph = s;
 				}
+				//free(s);
 			}
 			fscanf(file, "%f", &i);
 		}
 		fclose(file);
 	}	
-}*/
+}
 
 
 //Vector functions
@@ -330,10 +320,11 @@ Vector multVectors(Vector v, double scalar){
 
 //Plane intersection
 
+/*
 double findIntersection(Ray ray,Plane p){
 	Vector ray_direction = ray.direction;
 
-	double a = dotProduct(ray_direction,p.normal);
+	double a = dotProduct(ray_direction,p.);
 
 	if (a == 0){
 	//ray is parrallel to plane
@@ -352,13 +343,14 @@ double findIntersection(Ray ray,Plane p){
 		return -1*b/a;
 	}
 }
+*/
 
 double findSphereIntersection(Ray ray, Sphere sphere){
 	/*findSphere intersection, finds the intersection between
 	the sphere and ray, returns root, -1 if missed*/
 	double a = 1;
-	double b = (2*(ray.origin.x - sphere.center.x)*ray.direction.x) + (2*(ray.origin.y - sphere.center.y)*ray.direction.y) + (2*(ray.origin.z - sphere.center.z)*ray.direction.z);
-	double c = pow(ray.origin.x - sphere.center.x, 2) + pow(ray.origin.y - sphere.center.y, 2) + pow(ray.origin.z - sphere.center.z, 2) - (sphere.radius*sphere.radius);
+	double b = (2*(ray.origin.x - sphere.pos.x)*ray.direction.x) + (2*(ray.origin.y - sphere.pos.y)*ray.direction.y) + (2*(ray.origin.z - sphere.pos.z)*ray.direction.z);
+	double c = pow(ray.origin.x - sphere.pos.x, 2) + pow(ray.origin.y - sphere.pos.y, 2) + pow(ray.origin.z - sphere.pos.z, 2) - (sphere.rad.totalRadius*sphere.rad.totalRadius);
 
 	double discriminant = b*b - 4*c;
 
@@ -382,10 +374,10 @@ double findSphereIntersection(Ray ray, Sphere sphere){
 	}
 }
 
-double testFindSphere (Ray ray, Sphere sphere){
+double testFindSphere (Ray ray, Sphere* sphere){
 	double a = 1;
-	double b = 2*(ray.direction.x*(ray.origin.x-sphere.center.x)+ray.direction.y*(ray.origin.y-sphere.center.y)+ray.direction.z*(ray.origin.z-sphere.center.z));
-	double c = pow(ray.origin.x - sphere.center.x, 2) + pow(ray.origin.y - sphere.center.y, 2) + pow(ray.origin.z - sphere.center.z, 2) - pow(sphere.radius,2);
+	double b = 2*(ray.direction.x*(ray.origin.x-sphere->pos.x)+ray.direction.y*(ray.origin.y-sphere->pos.y)+ray.direction.z*(ray.origin.z-sphere->pos.z));
+	double c = pow(ray.origin.x - sphere->pos.x, 2) + pow(ray.origin.y - sphere->pos.y, 2) + pow(ray.origin.z - sphere->pos.z, 2) - pow(sphere->rad.totalRadius,2);
 	
 	double disc = pow(b,2)-4*c;
 
@@ -602,22 +594,14 @@ main(int argc, char **argv)
 	originVec.y = 0;
 	originVec.z = 0;
 
-	sphere.center = originVec;
-	sphere.radius = 2;
-	sphere.color = green;
-
-	//Plane stuff
-
-	plane.normal = Y;
-	plane.distance = -1;
-	plane.color = planeColor;
-
 	//Scene light is white with vector or position
 	scene_light.c = white;
 	scene_light.v = light_pos;
 
-	aspectratio = (double)screenWidth/(double)screenWidth;
+	readFile();
 
+	aspectratio = (double)screenWidth/(double)screenWidth;
+	printf("%f",global.sph->pos.y);
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
 			double intersectionT;
@@ -698,7 +682,7 @@ main(int argc, char **argv)
 
 			//testingVar = testFindSphere(camera_ray,sphere);
 			//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
-			intersectionT = testFindSphere(camera_ray,sphere);
+			intersectionT = testFindSphere(camera_ray,global.sph);
 			if (intersectionT>0){
 				//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
 				printf("Sphere Intersection=%f\n", intersectionT);
@@ -719,13 +703,6 @@ main(int argc, char **argv)
 		}
 	}
 
-
-
-	//
-
-
-
-	//readFile();
 	//drawShapes();
     glutMainLoop();
 	
