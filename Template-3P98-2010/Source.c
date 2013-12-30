@@ -57,7 +57,7 @@ typedef struct Donut {
 } Donut;
 
 // Plane shape
-/*typedef struct Plane {
+typedef struct Plane {
 	int id;
 	Position pos;
 	Size siz;
@@ -65,10 +65,10 @@ typedef struct Donut {
 	Colour col;
 	Transparency trans;
 	struct Plane *next;
-} Plane;*/
+} Plane;
 
 // Sphere shape
-/*typedef struct Sphere {
+typedef struct Sphere {
 	int id;
 	Position pos;	
 	Radius rad;
@@ -76,7 +76,7 @@ typedef struct Donut {
 	Colour col;
 	Transparency trans;
 	struct Sphere *next;
-} Sphere;*/
+} Sphere;
 
 // Rectangle shape
 typedef struct Rect {
@@ -111,6 +111,13 @@ typedef struct Triangle {
 	struct Triangle *next;
 } Triangle;
 
+/*
+typedef struct Plane{
+	Vector normal;
+	double distance;
+	Color color;
+}Plane;*/
+
 //the global structure
 typedef struct {
 	struct Cylinder *cyl;
@@ -118,6 +125,7 @@ typedef struct {
 	struct Sphere *sph;
 	struct Plane *pla;
 	struct Donut *don;
+	int depth;
 } glob;
 glob global;
 
@@ -160,23 +168,10 @@ typedef struct Light{
 	struct Vector v;//position
 } Light;
 
-typedef struct Sphere{
-	Vector center;
-	double radius;
-	Color color;
-} Sphere;
-
 typedef struct Object{
 	Color color;
 	double findIntersection;
 } Object;
-
-typedef struct Plane{
-	Vector normal;
-	double distance;
-	Color color;
-}Plane;
-
 
 int screenWidth;	// size * cellSize
 
@@ -209,7 +204,7 @@ void keyboard(unsigned char key, int x, int y) {
    }
 }
 
-/*void readFile(){
+void readFile(){
 	FILE *file;
 	float i;
 	Sphere s;
@@ -258,7 +253,7 @@ void keyboard(unsigned char key, int x, int y) {
 		}
 		fclose(file);
 	}	
-}*/
+}
 
 
 //Vector functions
@@ -329,6 +324,7 @@ Vector multVectors(Vector v, double scalar){
 
 //Plane intersection
 
+/*
 double findIntersection(Ray ray,Plane p){
 	Vector ray_direction = ray.direction;
 
@@ -351,7 +347,7 @@ double findIntersection(Ray ray,Plane p){
 		return -1*b/a;
 	}
 }
-
+*/
 
 /*
 ray details sheet
@@ -548,7 +544,7 @@ main(int argc, char **argv)
 	originVec.y = 0;
 	originVec.z = 0;
 
-	sphere.center = originVec;
+/*	sphere.center = originVec;
 	sphere.radius = 1;
 	sphere.color = green;
 
@@ -556,7 +552,7 @@ main(int argc, char **argv)
 
 	plane.normal = Y;
 	plane.distance = -1;
-	plane.color = planeColor;
+	plane.color = planeColor;*/
 
 	//Scene light is white with vector or position
 	scene_light.c = white;
