@@ -547,6 +547,10 @@ main(int argc, char **argv)
 
 	//campos (3,.5,-4) above y plane
 
+	/*campos.x = 3;
+	campos.y = 1.5;
+	campos.z = -4;*/
+
 	campos.x = 3;
 	campos.y = 1.5;
 	campos.z = -4;
@@ -603,7 +607,7 @@ main(int argc, char **argv)
 	originVec.z = 0;
 
 	sphere.center = originVec;
-	sphere.radius = 2;
+	sphere.radius = 1;
 	sphere.color = green;
 
 	//Plane stuff
@@ -698,7 +702,8 @@ main(int argc, char **argv)
 
 			//testingVar = testFindSphere(camera_ray,sphere);
 			//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
-			intersectionT = testFindSphere(camera_ray,sphere);
+			//findSphereIntersection
+			intersectionT = findSphereIntersection(camera_ray,sphere);
 			if (intersectionT>0){
 				//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
 				printf("Sphere Intersection=%f\n", intersectionT);
@@ -707,11 +712,15 @@ main(int argc, char **argv)
 				raySphereIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
 
 				printf("\n");
-				printf("raySphereInterscetion.x %d",raySphereIntersection.x);
+				//printf("raySphereInterscetion.x %d",raySphereIntersection.x);
+				//Sphere Intersection=%f
+				printf("ray Intersection.x =%f",raySphereIntersection.x);
 				printf("\n");
-				printf("raySphereInterscetion.y %d",raySphereIntersection.y);
+				//printf("raySphereInterscetion.y %d",raySphereIntersection.y);
+				printf("ray Intersection.y =%f",raySphereIntersection.y);
 				printf("\n");
-				printf("raySphereInterscetion.z %d",raySphereIntersection.z);
+				//printf("raySphereInterscetion.z %d",raySphereIntersection.z);
+				printf("ray Intersection.z =%f",raySphereIntersection.z);
 				printf("\n");
 			}
 			//printf("\n");
