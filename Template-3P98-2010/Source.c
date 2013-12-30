@@ -268,10 +268,11 @@ double magnitude (Vector v){
 }//returns magnitude of a vector
 
 Vector normalize (Vector v){
-	v.x = v.x/magnitude(v);
-	v.y = v.y/magnitude(v);
-	v.z = v.z/magnitude(v);
-	return v;
+	Vector temp;
+	temp.x = v.x/magnitude(v);
+	temp.y = v.y/magnitude(v);
+	temp.z = v.z/magnitude(v);
+	return temp;
 }//normalize a vector
 
 Vector negative (Vector v){
@@ -352,6 +353,60 @@ double findIntersection(Ray ray,Plane p){
 	}
 }
 
+double findSphereIntersection(Ray ray, Sphere sphere){
+	/*findSphere intersection, finds the intersection between
+	the sphere and ray, returns root, -1 if missed*/
+	double a = 1;
+	double b = (2*(ray.origin.x - sphere.center.x)*ray.direction.x) + (2*(ray.origin.y - sphere.center.y)*ray.direction.y) + (2*(ray.origin.z - sphere.center.z)*ray.direction.z);
+	double c = pow(ray.origin.x - sphere.center.x, 2) + pow(ray.origin.y - sphere.center.y, 2) + pow(ray.origin.z - sphere.center.z, 2) - (sphere.radius*sphere.radius);
+
+	double discriminant = b*b - 4*c;
+
+	if (discriminant > 0) {
+		//ray intersects sphere
+		//first root
+		double root_1 = ((-1*b - sqrt(discriminant))/2) - 0.0001;
+		if (root_1 > 0){
+			//first root is smallest positive root
+			return root_1;
+		}
+		else {
+			//the second root is the smallest positive root			
+			double root_2 = ((sqrt(discriminant) - b)/2) - 0.0001;
+			return root_2;
+		}
+	}
+	else {
+		//ray missed sphere
+		return -1;
+	}
+}
+
+double testFindSphere (Ray ray, Sphere sphere){
+	double a = 1;
+	double b = 2*(ray.direction.x*(ray.origin.x-sphere.center.x)+ray.direction.y*(ray.origin.y-sphere.center.y)+ray.direction.z*(ray.origin.z-sphere.center.z));
+	double c = pow(ray.origin.x - sphere.center.x, 2) + pow(ray.origin.y - sphere.center.y, 2) + pow(ray.origin.z - sphere.center.z, 2) - pow(sphere.radius,2);
+	
+	double disc = pow(b,2)-4*c;
+
+	double t0;
+	double t1;
+
+	t0 = (((-1)*b-sqrt(disc))/2);
+	t1 = (((-1)*b+sqrt(disc))/2);
+
+	if (disc < 0){
+		//no intersection
+		return -1;
+	} else{
+		if (t0>0){
+			return t0;
+		} else  if (t1>0){
+			return t1;
+		}
+	}
+}
+
 
 /*
 ray details sheet
@@ -381,7 +436,6 @@ void drawShapes(){
 
 main(int argc, char **argv)
 {
-
 	//Ray declaration stuff
 	int i,j;
 	int x,y,z;
@@ -420,13 +474,13 @@ main(int argc, char **argv)
 
 	//TESTING DELETE ME
 
-	Vector vecTest1;
+	/*Vector vecTest1;
 	Vector vecTest2;
 	Vector test;
 
-	vecTest1.x = 1;
-	vecTest1.y = 2;
-	vecTest1.z = 3;
+	vecTest1.x = -1;
+	vecTest1.y = 1;
+	vecTest1.z = -11;
 
 	vecTest2.x = 4;
 	vecTest2.y = 9;
@@ -436,13 +490,13 @@ main(int argc, char **argv)
 	printf("This is Vector val y %f",vecTest1.y);
 	printf("This is Vector val z %f",vecTest1.z);
 
-	test = addVectors(vecTest1,vecTest2);
+	vecTest1 = normalize(vecTest1);
 
 	printf("AFTER\n");
 
-	printf("This is Vector val x %f",test.x);
-	printf("This is Vector val y %f",test.y);
-	printf("This is Vector val z %f",test.z);
+	printf("This is Vector val x %f",vecTest1.x);
+	printf("This is Vector val y %f",vecTest1.y);
+	printf("This is Vector val z %f",vecTest1.z);*/
 
 
 	//END TEST
@@ -549,7 +603,7 @@ main(int argc, char **argv)
 	originVec.z = 0;
 
 	sphere.center = originVec;
-	sphere.radius = 1;
+	sphere.radius = 2;
 	sphere.color = green;
 
 	//Plane stuff
@@ -566,28 +620,101 @@ main(int argc, char **argv)
 
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
+			double intersectionT;
+						
+			Vector p;
+			Vector direction;
+			Vector raySphereIntersection;
+
+			p.x = i;
+			p.y = j;			
+			p.z = 0; //Need to determine proper z value
+			
 			//direction of ray
 			//image is square
-			xamount = (i+0.5)/screenWidth;
+			/*xamount = (i+0.5)/screenWidth;
 			yamount = ((screenWidth - j)+0.5)/screenWidth;
 			cam_ray_origin = camera.campos;
-			//cam_ray_direction = camdir
 			innerTemp3 = camright;
 			multVectors(innerTemp3,(xamount-0.5));
 			innerTemp = camdir;
 			addVectors(innerTemp, innerTemp3);
-
 			innerTemp2 = camdown;
 			multVectors(innerTemp2,(yamount-0.5));
-
 			innerTemp2 = normalize(innerTemp2);
-
 			addVectors(innerTemp, innerTemp2);
-
 			camera_ray.origin = cam_ray_origin;
+			camera_ray.direction = innerTemp;*/
 
-			camera_ray.direction = innerTemp;
+			innerTemp.x = 0;
+			innerTemp.y = 0;
+			innerTemp.z = 0;
 
+			innerTemp2.x = 0;
+			innerTemp2.y = 0;
+			innerTemp2.z = 0;
+
+			innerTemp3.x = 0;
+			innerTemp3.y = 0;
+			innerTemp3.z = 0;
+
+			xamount = (i+0.5)/screenWidth;
+			yamount = ((screenWidth-j)+0.5)/screenWidth;
+			cam_ray_origin = camera.campos;
+			innerTemp3 = camright;
+			innerTemp3 = multVectors(innerTemp3,(xamount-0.5));
+			innerTemp = camdir;
+			innerTemp = addVectors(innerTemp, innerTemp3);
+			innerTemp2 = camdown;
+			innerTemp3 = multVectors(innerTemp2,(yamount-0.5));
+			innerTemp2 = normalize(innerTemp2);
+			innerTemp = addVectors(innerTemp, innerTemp2);
+			camera_ray.origin = cam_ray_origin;
+			//camera_ray.direction = innerTemp;
+
+			direction.x = p.x - camera_ray.origin.x;
+			direction.y = p.y - camera_ray.origin.y;
+			direction.z = p.z - camera_ray.origin.z;
+
+			direction = normalize(direction);		
+
+			camera_ray.direction = direction;
+
+
+			//loop through check each pixel for intersection
+			/*printf("%fcamera origin x: ",camera_ray.origin.x);
+			printf("\n");
+			printf("%fcamera origin y: ",camera_ray.origin.y);
+			printf("\n");
+			printf("%fcamera origin z: ",camera_ray.origin.z);
+			printf("\n");
+
+			printf("%fcamera direction x: ",camera_ray.direction.x);
+			printf("\n");
+			printf("%fcamera direction y: ",camera_ray.direction.y);
+			printf("\n");
+			printf("%fcamera direction z: ",camera_ray.direction.z);
+			printf("\n");*/
+
+			//testingVar = testFindSphere(camera_ray,sphere);
+			//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
+			intersectionT = testFindSphere(camera_ray,sphere);
+			if (intersectionT>0){
+				//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
+				printf("Sphere Intersection=%f\n", intersectionT);
+				raySphereIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
+				raySphereIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
+				raySphereIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
+
+				printf("\n");
+				printf("raySphereInterscetion.x %d",raySphereIntersection.x);
+				printf("\n");
+				printf("raySphereInterscetion.y %d",raySphereIntersection.y);
+				printf("\n");
+				printf("raySphereInterscetion.z %d",raySphereIntersection.z);
+				printf("\n");
+			}
+			//printf("\n");
 
 		}
 	}
