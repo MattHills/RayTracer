@@ -168,10 +168,6 @@ typedef struct Object{
 
 int screenWidth;	// size * cellSize
 
-void redraw(){
-
-}
-
 // Changes the window size
 void reshape(int x, int y) {
    glViewport(0, 0, x, y);
@@ -425,9 +421,19 @@ void drawShapes(){
 
 }
 
+void redraw(){	
+	
+	glColor3f(0.5,0.5,0.5);
 
-main(int argc, char **argv)
-{
+	glBegin(GL_POLYGON);
+			glVertex3i(1, 1, 0);
+			glVertex3i(1, 4, 0);
+			glVertex3i(4, 4, 0);
+			glVertex3i(4, 1, 0);
+	glEnd();
+}
+
+void rayTrace(){
 	//Ray declaration stuff
 	int i,j;
 	int x,y,z;
@@ -463,64 +469,13 @@ main(int argc, char **argv)
 	Vector campos;
 	Light scene_light;
 
-
-	//TESTING DELETE ME
-
-	/*Vector vecTest1;
-	Vector vecTest2;
-	Vector test;
-
-	vecTest1.x = -1;
-	vecTest1.y = 1;
-	vecTest1.z = -11;
-
-	vecTest2.x = 4;
-	vecTest2.y = 9;
-	vecTest2.z = 3;
-
-	printf("This is Vector val x %f",vecTest1.x);
-	printf("This is Vector val y %f",vecTest1.y);
-	printf("This is Vector val z %f",vecTest1.z);
-
-	vecTest1 = normalize(vecTest1);
-
-	printf("AFTER\n");
-
-	printf("This is Vector val x %f",vecTest1.x);
-	printf("This is Vector val y %f",vecTest1.y);
-	printf("This is Vector val z %f",vecTest1.z);*/
-
-
-	//END TEST
-
-	// Initialize game settings
-	screenWidth = 500;	
-	
-	//printf("Q:quit\nU:toggle spray\nZ:spin on z\nX:spin on x\nY:spin on y\nC:toggle culling\nV:toggle colours\nD:toggle size\nI:view points\nO:view wire frame\nP:view polygons\nA:toggle auto fire particles\nS:set speed\nF:manual fire mode\nB:toggle rotate\nN:toggle friction\nR:reset\n");
-    glutInit(&argc, argv);
-    glutInitWindowSize(screenWidth, screenWidth);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	
-    glutCreateWindow("Ray Tracer");
-
-    glutKeyboardFunc(keyboard);
-    glutDisplayFunc(redraw);
-	glutIdleFunc(redraw);
-    glutReshapeFunc(reshape);
-
-    glMatrixMode(GL_PROJECTION);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glLoadIdentity();
-
-	gluPerspective(20, screenWidth/screenWidth, 0.1, 1500);
-	gluLookAt(900, 250, 800, 0, 0, 0, 0, 1, 0);
-
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	glMatrixMode(GL_MODELVIEW);
-	glClearColor(0.0, 0.0, 0.0, 1.0);
 
-	glPushMatrix();
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//glMatrixMode(GL_MODELVIEW);
 
 
 	//Ray stuff	
@@ -541,7 +496,7 @@ main(int argc, char **argv)
 
 	campos.x = 3;
 	campos.y = 1.5;
-	campos.z = -10;
+	campos.z = 0;
 
 	look_at.x = 0;
 	look_at.y = 0;
@@ -709,13 +664,52 @@ main(int argc, char **argv)
 				printf("\n");
 				printf("raySphereInterscetion.z %f",raySphereIntersection.z);
 				printf("\n");
+
+				glColor3f(global.sph->col.r, global.sph->col.g, global.sph->col.b);
+				glBegin(GL_POINTS);
+				glVertex3f(raySphereIntersection.x,raySphereIntersection.y,raySphereIntersection.z);
+				glEnd();
 			}
 			//printf("\n");
 
 		}
 	}
+	glFlush();
+}
 
-	//drawShapes();
+
+main(int argc, char **argv)
+{
+	// Initialize game settings
+	screenWidth = 500;	
+	
+	//printf("Q:quit\nU:toggle spray\nZ:spin on z\nX:spin on x\nY:spin on y\nC:toggle culling\nV:toggle colours\nD:toggle size\nI:view points\nO:view wire frame\nP:view polygons\nA:toggle auto fire particles\nS:set speed\nF:manual fire mode\nB:toggle rotate\nN:toggle friction\nR:reset\n");
+    glutInit(&argc, argv);
+    glutInitWindowSize(screenWidth, screenWidth);
+	//glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
+	glutInitDisplayMode(GLUT_RGB);
+
+    glutCreateWindow("Ray Tracer");
+
+    glutKeyboardFunc(keyboard);
+    glutDisplayFunc(rayTrace);
+	//glutIdleFunc(redraw);
+    glutReshapeFunc(reshape);
+
+    glMatrixMode(GL_PROJECTION);
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthFunc(GL_LESS);
+	//glLoadIdentity();
+
+	 glOrtho(-10, 10, -10, 10, -1.0, 1.0);
+	//glOrtho(-5,screenWidth,-5,screenWidth,0,10);
+	//gluPerspective(20, screenWidth/screenWidth, 0.1, 1500);
+	//gluLookAt(900, 250, 800, 0, 0, 0, 0, 1, 0);
+
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+
+	//glPushMatrix();
+	//rayTrace();
     glutMainLoop();
 	
 
