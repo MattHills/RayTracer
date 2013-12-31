@@ -19,7 +19,7 @@ typedef struct {
 } Angle;
 
 // Between 0-255
-typedef struct {
+typedef struct Colour{
 	float r;
 	float g;
 	float b;
@@ -149,19 +149,19 @@ typedef struct Camera{
 	struct Vector camdown;
 } Camera;
 
-typedef struct Color {
+/*typedef struct Color {
 	float r;
 	float g;
 	float b;
-} Color;
+} Color;*/
 
 typedef struct Light{
-	struct Color c;//color
+	struct Colour c;//color
 	struct Vector v;//position
 } Light;
 
 typedef struct Object{
-	Color color;
+	Colour color;
 	double findIntersection;
 } Object;
 
@@ -341,12 +341,12 @@ double findIntersection(Ray ray,Plane p){
 }
 */
 
-double findSphereIntersection(Ray ray, Sphere sphere){
+double findSphereIntersection(Ray ray, Sphere* sphere){
 	/*findSphere intersection, finds the intersection between
 	the sphere and ray, returns root, -1 if missed*/
 	double a = 1;
-	double b = (2*(ray.origin.x - sphere.pos.x)*ray.direction.x) + (2*(ray.origin.y - sphere.pos.y)*ray.direction.y) + (2*(ray.origin.z - sphere.pos.z)*ray.direction.z);
-	double c = pow(ray.origin.x - sphere.pos.x, 2) + pow(ray.origin.y - sphere.pos.y, 2) + pow(ray.origin.z - sphere.pos.z, 2) - (sphere.rad.totalRadius*sphere.rad.totalRadius);
+	double b = (2*(ray.origin.x - sphere->pos.x)*ray.direction.x) + (2*(ray.origin.y - sphere->pos.y)*ray.direction.y) + (2*(ray.origin.z - sphere->pos.z)*ray.direction.z);
+	double c = pow(ray.origin.x - sphere->pos.x, 2) + pow(ray.origin.y - sphere->pos.y, 2) + pow(ray.origin.z - sphere->pos.z, 2) - (sphere->rad.totalRadius*sphere->rad.totalRadius);
 
 	double discriminant = b*b - 4*c;
 
@@ -460,10 +460,10 @@ void rayTrace(){
 	Vector innerTemp2;
 	Vector innerTemp3;
 
-	Color white;
-	Color green;
-	Color black;
-	Color planeColor;
+	Colour white;
+	Colour green;
+	Colour black;
+	Colour planeColor;
 
 	Vector light_pos;
 	Vector campos;
@@ -558,6 +558,8 @@ void rayTrace(){
 	aspectratio = (double)screenWidth/(double)screenWidth;
 
 	//DEBUG STUFF
+	global.sph->col = green;
+
 	printf("\n");
 	printf("sphere.x %f",global.sph->pos.x);
 	printf("\n");
@@ -567,7 +569,12 @@ void rayTrace(){
 	printf("\n");
 	printf("sphere.totalrad %f",global.sph->rad.totalRadius);
 	printf("\n");
-	
+	printf("sphere.color.r %f",global.sph->col.r);
+	printf("\n");
+	printf("sphere.color.g %f",global.sph->col.g);
+	printf("\n");
+	printf("sphere.color.b %f",global.sph->col.b);
+	printf("\n");
 
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
@@ -649,7 +656,8 @@ void rayTrace(){
 
 			//testingVar = testFindSphere(camera_ray,sphere);
 			//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
-			intersectionT = testFindSphere(camera_ray,global.sph);
+			//intersectionT = testFindSphere(camera_ray,global.sph);
+			intersectionT = findSphereIntersection(camera_ray,global.sph);
 			if (intersectionT>0){
 				//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
 				//printf("Sphere Intersection=%f\n", intersectionT);
