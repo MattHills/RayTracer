@@ -587,7 +587,7 @@ main(int argc, char **argv)
 	planeColor.r = 0.5;
 	planeColor.g = 0.25;
 	planeColor.b = 0.25;
-
+	
 	//Sphere sphere is a sphere
 
 	originVec.x = 0;
@@ -601,6 +601,18 @@ main(int argc, char **argv)
 	readFile();
 
 	aspectratio = (double)screenWidth/(double)screenWidth;
+
+	//DEBUG STUFF
+	printf("\n");
+	printf("sphere.x %f",global.sph->pos.x);
+	printf("\n");
+	printf("sphere.y %f",global.sph->pos.y);
+	printf("\n");
+	printf("sphere.z %f",global.sph->pos.z);
+	printf("\n");
+	printf("sphere.totalrad %f",global.sph->rad.totalRadius);
+	printf("\n");
+	
 
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
@@ -685,7 +697,7 @@ main(int argc, char **argv)
 			intersectionT = testFindSphere(camera_ray,global.sph);
 			if (intersectionT>0){
 				//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
-				printf("Sphere Intersection=%f\n", intersectionT);
+				//printf("Sphere Intersection=%f\n", intersectionT);
 				raySphereIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
 				raySphereIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
 				raySphereIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
