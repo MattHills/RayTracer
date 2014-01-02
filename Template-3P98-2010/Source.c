@@ -603,8 +603,6 @@ void rayTrace(){
 
 	plane->col = planeColor;
 
-	//debugg
-
 	printf("\n");
 	printf("plane stuff normal x %f",plane->normal.x);
 	printf("\n");
@@ -630,8 +628,6 @@ void rayTrace(){
 	printf("\n");
 	printf("sphere.color.b %f",global.sph->col.b);
 	printf("\n");*/
-
-
 
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
