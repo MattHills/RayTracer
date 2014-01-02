@@ -2,10 +2,16 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <freeglut.h>
+#include <FreeImage.h>
 #include <time.h>
 #include <math.h>
 
 #define MAX_RAY_DEPTH 3
+
+//the pixel structure
+typedef struct {
+	GLubyte r, g, b;
+} pixel;
 
 typedef struct {
 	float val;
@@ -136,6 +142,8 @@ typedef struct {
 	struct Sphere *sph;
 	struct Plane *pla;
 	struct Donut *don;
+	pixel *data;
+	pixel *tempData;
 } glob;
 glob global;
 
@@ -177,6 +185,33 @@ typedef struct Object{
 
 
 int screenWidth;	// size * cellSize
+
+//write_img
+void write_img(char *name, pixel *data, int width, int height) {
+	FIBITMAP *image;
+	RGBQUAD aPixel;
+	int i,j;
+
+	image = FreeImage_Allocate(width, height, 24, 0, 0, 0);
+	if(!image) {
+		perror("FreeImage_Allocate");
+		return;
+	}
+	for(i = 0 ; i < height ; i++) {
+		for(j = 0 ; j < width ; j++) {
+			aPixel.rgbRed = data[i+j*width].r;
+			aPixel.rgbGreen = data[i+j*width].g;
+			aPixel.rgbBlue = data[i+j*width].b;
+
+			FreeImage_SetPixelColor(image, j, i, &aPixel);
+		}
+	}
+	if(!FreeImage_Save(FIF_TIFF, image, name, 0)) {
+		perror("FreeImage_Save");
+	}
+	FreeImage_Unload(image);
+	printf("Write Complete");
+}//write_img
 
 // Changes the window size
 void reshape(int x, int y) {
@@ -239,6 +274,7 @@ void readFile(){
 				fscanf(file, "%f", &i);
 				s->trans.val = i;
 				s->next = (Sphere*)malloc(sizeof (struct Sphere));
+				s->next = 0;
 
 				if(!global.sph){
 					global.sph = (Sphere*)malloc(sizeof (struct Sphere));
@@ -459,7 +495,7 @@ void redraw(){
 	glEnd();
 }
 
-void rayTrace(){
+void rayTrace(pixel* Im){
 	//Ray declaration stuff
 	int i,j;
 	int x,y,z;
@@ -475,12 +511,13 @@ void rayTrace(){
 	Vector camdown;
 	Vector originVec;
 	Sphere sphere;
-	Plane *plane;	
+	Plane* plane;	
 	Vector cam_ray_origin;
 	Vector cam_ray_direction;
 	Ray camera_ray;
+	Sphere *testSphere;
 
-	//temp vectors
+	//temp vectors	
 
 	Vector innerTemp;
 	Vector innerTemp2;
@@ -495,9 +532,9 @@ void rayTrace(){
 	Vector campos;
 	Light scene_light;
 
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glClear(GL_COLOR_BUFFER_BIT);
 
-	glMatrixMode(GL_MODELVIEW);
+	//glMatrixMode(GL_MODELVIEW);
 
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -520,10 +557,10 @@ void rayTrace(){
 
 	//campos (3,.5,-4) above y plane
 
-	campos.x = 3;
-	campos.y = 1.5;
+	campos.x = screenWidth/2;
+	campos.y = screenWidth/2;
 	//campos.z = -10000;
-	campos.z = -10000;
+	campos.z = -10;
 	//campos.z = -1000;
 
 	/*campos.x = 3;
@@ -603,12 +640,16 @@ void rayTrace(){
 
 	plane->col = planeColor;
 
+	//debugg
+
+	/*
 	printf("\n");
 	printf("plane stuff normal x %f",plane->normal.x);
 	printf("\n");
 	printf("plane stuff normal y %f",plane->normal.y);
 	printf("\n");
 	printf("plane stuff normal z %f",plane->normal.z);
+	*/
 
 	//DEBUG STUFF
 	/*global.sph->col = green;
@@ -629,125 +670,142 @@ void rayTrace(){
 	printf("sphere.color.b %f",global.sph->col.b);
 	printf("\n");*/
 
-	for (i = 0;i<screenWidth;i++){
-		for (j = 0;j<screenWidth;j++){		
-			double intersectionT;
+	testSphere = global.sph;
+
+	while(testSphere != NULL){
+		for (i = 0;i<screenWidth;i++){
+			for (j = 0;j<screenWidth;j++){		
+				double intersectionT;
 						
-			Vector p;
-			Vector direction;
-			Vector raySphereIntersection;
+				Vector p;
+				Vector direction;
+				Vector raySphereIntersection;
 
-			p.x = i;
-			p.y = j;			
-			//p.z = -5000; //Need to determine proper z value
-			p.z = 2000;
+				p.x = i;
+				p.y = j;			
+				//p.z = -5000; //Need to determine proper z value
+				p.z = 1000;
 			
-			//direction of ray
-			//image is square
-			/*xamount = (i+0.5)/screenWidth;
-			yamount = ((screenWidth - j)+0.5)/screenWidth;
-			cam_ray_origin = camera.campos;
-			innerTemp3 = camright;
-			multVectors(innerTemp3,(xamount-0.5));
-			innerTemp = camdir;
-			addVectors(innerTemp, innerTemp3);
-			innerTemp2 = camdown;
-			multVectors(innerTemp2,(yamount-0.5));
-			innerTemp2 = normalize(innerTemp2);
-			addVectors(innerTemp, innerTemp2);
-			camera_ray.origin = cam_ray_origin;
-			camera_ray.direction = innerTemp;*/
+				//direction of ray
+				//image is square
+				/*xamount = (i+0.5)/screenWidth;
+				yamount = ((screenWidth - j)+0.5)/screenWidth;
+				cam_ray_origin = camera.campos;
+				innerTemp3 = camright;
+				multVectors(innerTemp3,(xamount-0.5));
+				innerTemp = camdir;
+				addVectors(innerTemp, innerTemp3);
+				innerTemp2 = camdown;
+				multVectors(innerTemp2,(yamount-0.5));
+				innerTemp2 = normalize(innerTemp2);
+				addVectors(innerTemp, innerTemp2);
+				camera_ray.origin = cam_ray_origin;
+				camera_ray.direction = innerTemp;*/
 
-			innerTemp.x = 0;
-			innerTemp.y = 0;
-			innerTemp.z = 0;
+				innerTemp.x = 0;
+				innerTemp.y = 0;
+				innerTemp.z = 0;
 
-			innerTemp2.x = 0;
-			innerTemp2.y = 0;
-			innerTemp2.z = 0;
+				innerTemp2.x = 0;
+				innerTemp2.y = 0;
+				innerTemp2.z = 0;
 
-			innerTemp3.x = 0;
-			innerTemp3.y = 0;
-			innerTemp3.z = 0;
+				innerTemp3.x = 0;
+				innerTemp3.y = 0;
+				innerTemp3.z = 0;
 
-			xamount = (i+0.5)/screenWidth;
-			yamount = ((screenWidth-j)+0.5)/screenWidth;
-			cam_ray_origin = camera.campos;
-			innerTemp3 = camright;
-			innerTemp3 = multVectors(innerTemp3,(xamount-0.5));
-			innerTemp = camdir;
-			innerTemp = addVectors(innerTemp, innerTemp3);
-			innerTemp2 = camdown;
-			innerTemp3 = multVectors(innerTemp2,(yamount-0.5));
-			innerTemp2 = normalize(innerTemp2);
-			innerTemp = addVectors(innerTemp, innerTemp2);
-			camera_ray.origin = cam_ray_origin;
-			//camera_ray.direction = innerTemp;
+				xamount = (i+0.5)/screenWidth;
+				yamount = ((screenWidth-j)+0.5)/screenWidth;
+				cam_ray_origin = camera.campos;
+				innerTemp3 = camright;
+				innerTemp3 = multVectors(innerTemp3,(xamount-0.5));
+				innerTemp = camdir;
+				innerTemp = addVectors(innerTemp, innerTemp3);
+				innerTemp2 = camdown;
+				innerTemp3 = multVectors(innerTemp2,(yamount-0.5));
+				innerTemp2 = normalize(innerTemp2);
+				innerTemp = addVectors(innerTemp, innerTemp2);
+				camera_ray.origin = cam_ray_origin;
+				//camera_ray.direction = innerTemp;
 
-			direction.x = p.x - camera_ray.origin.x;
-			direction.y = p.y - camera_ray.origin.y;
-			direction.z = p.z - camera_ray.origin.z;
+				direction.x = p.x - camera_ray.origin.x;
+				direction.y = p.y - camera_ray.origin.y;
+				direction.z = p.z - camera_ray.origin.z;
 
-			direction = normalize(direction);		
+				direction = normalize(direction);		
 
-			camera_ray.direction = direction;
+				camera_ray.direction = direction;
 
 
-			//loop through check each pixel for intersection
-			/*printf("%fcamera origin x: ",camera_ray.origin.x);
-			printf("\n");
-			printf("%fcamera origin y: ",camera_ray.origin.y);
-			printf("\n");
-			printf("%fcamera origin z: ",camera_ray.origin.z);
-			printf("\n");
+				//loop through check each pixel for intersection
+				/*printf("%fcamera origin x: ",camera_ray.origin.x);
+				printf("\n");
+				printf("%fcamera origin y: ",camera_ray.origin.y);
+				printf("\n");
+				printf("%fcamera origin z: ",camera_ray.origin.z);
+				printf("\n");
 
-			printf("%fcamera direction x: ",camera_ray.direction.x);
-			printf("\n");
-			printf("%fcamera direction y: ",camera_ray.direction.y);
-			printf("\n");
-			printf("%fcamera direction z: ",camera_ray.direction.z);
-			printf("\n");*/
+				printf("%fcamera direction x: ",camera_ray.direction.x);
+				printf("\n");
+				printf("%fcamera direction y: ",camera_ray.direction.y);
+				printf("\n");
+				printf("%fcamera direction z: ",camera_ray.direction.z);
+				printf("\n");*/
 
-			//testingVar = testFindSphere(camera_ray,sphere);
-			//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
-			//intersectionT = testFindSphere(camera_ray,global.sph);
-			//intersectionT = testFindSphere(camera_ray,global.sph);
+				//testingVar = testFindSphere(camera_ray,sphere);
+				//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
+				//intersectionT = testFindSphere(camera_ray,global.sph);
+				intersectionT = testFindSphere(camera_ray,testSphere);
 			
-			intersectionT = findPlaneIntersection(camera_ray,global.pla);			
-			if (intersectionT>0){
-				//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
-				//printf("Sphere Intersection=%f\n", intersectionT);
-				raySphereIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
-				raySphereIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
-				raySphereIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
+				//intersectionT = findPlaneIntersection(camera_ray,global.pla);			
+				if (intersectionT>0){
+					//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
+					//printf("Sphere Intersection=%f\n", intersectionT);
+					raySphereIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
+					raySphereIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
+					raySphereIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
 
-				printf("\n");
-				printf("raySphereInterscetion.x %f",raySphereIntersection.x);
-				printf("\n");
-				printf("raySphereInterscetion.y %f",raySphereIntersection.y);
-				printf("\n");
-				printf("raySphereInterscetion.z %f",raySphereIntersection.z);
-				printf("\n");
+					/*
+					printf("\n");
+					printf("raySphereInterscetion.x %f",raySphereIntersection.x);
+					printf("\n");
+					printf("raySphereInterscetion.y %f",raySphereIntersection.y);
+					printf("\n");
+					printf("raySphereInterscetion.z %f",raySphereIntersection.z);
+					printf("\n");
+					*/
 
-				//glColor3f(global.sph->col.r, global.sph->col.g, global.sph->col.b);
-				glColor3f(global.pla->col.r, global.pla->col.g, global.pla->col.b);
-				glBegin(GL_POINTS);
-				glVertex3f(raySphereIntersection.x,raySphereIntersection.y,raySphereIntersection.z);
-				glEnd();
+					//glColor3f(testSphere->col.r, testSphere->col.g, testSphere->col.b);
+					//glColor3f(global.pla->col.r, global.pla->col.g, global.pla->col.b);
+					//glBegin(GL_POINTS);
+					//glVertex3f(raySphereIntersection.x,raySphereIntersection.y,raySphereIntersection.z);
+					//glEnd();
+
+					Im[i+j*screenWidth].r = testSphere->col.r;
+					Im[i+j*screenWidth].b = testSphere->col.b;
+					Im[i+j*screenWidth].g = testSphere->col.g;
+				}
+				//printf("\n");
 			}
-			//printf("\n");
-
 		}
+		testSphere = testSphere->next;
 	}
-	glFlush();
+	//glFlush();
 }
 
 
 main(int argc, char **argv)
 {
 	// Initialize game settings
-	screenWidth = 500;	
+	screenWidth = 800;	
+
+	global.data = (pixel *)malloc((screenWidth)*(screenWidth)*sizeof(pixel *));
+
+	global.tempData = (pixel *)malloc((screenWidth)*(screenWidth)*sizeof(pixel *));
 	
+	rayTrace(global.data);
+	write_img("test.jpg", global.data, screenWidth, screenWidth);
+	/*
 	//printf("Q:quit\nU:toggle spray\nZ:spin on z\nX:spin on x\nY:spin on y\nC:toggle culling\nV:toggle colours\nD:toggle size\nI:view points\nO:view wire frame\nP:view polygons\nA:toggle auto fire particles\nS:set speed\nF:manual fire mode\nB:toggle rotate\nN:toggle friction\nR:reset\n");
     glutInit(&argc, argv);
     glutInitWindowSize(screenWidth, screenWidth);
@@ -766,7 +824,7 @@ main(int argc, char **argv)
 	//glDepthFunc(GL_LESS);
 	//glLoadIdentity();
 
-	glOrtho(0, screenWidth, 0, screenWidth, -100000, 1000);//old working orth
+	glOrtho(0, screenWidth, 0, screenWidth, -100, 1000);//old working orth
 
 	//glOrtho(0, screenWidth, 0, screenWidth, -1000, 100);
 
@@ -783,6 +841,7 @@ main(int argc, char **argv)
 	//glPushMatrix();
 	//rayTrace();
     glutMainLoop();
+	*/
 	
 
 }
