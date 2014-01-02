@@ -11,6 +11,14 @@ typedef struct {
 	float val;
 } Transparency;
 
+typedef struct Vector {
+	//Vector values
+	//still need to normalize
+   float x, y, z;
+   float magnitude;
+   float normalize;
+}Vector;
+
 // To angle on the shapes
 typedef struct {
 	float x;
@@ -59,13 +67,23 @@ typedef struct Donut {
 // Plane shape
 typedef struct Plane {
 	int id;
-	Position pos;
+	/*Position pos;	
 	Size siz;
-	Angle ang;
+	Angle ang;	
+	Transparency trans;*/
+	Vector normal;
+	double distance;
 	Colour col;
-	Transparency trans;
 	struct Plane *next;
 } Plane;
+
+/*typedef struct Plane {
+	int id;
+	Vector normal;
+	double distance;
+	Colour col;
+	struct Plane *next;
+} Plane;*/
 
 // Sphere shape
 typedef struct Sphere {
@@ -121,14 +139,6 @@ typedef struct {
 } glob;
 glob global;
 
-
-typedef struct Vector {
-	//Vector values
-	//still need to normalize
-   float x, y, z;
-   float magnitude;
-   float normalize;
-}Vector;
 
 //mag (sqrt((x*x) + (y*y) + (z*z))
 //normalize = 
@@ -316,8 +326,8 @@ Vector multVectors(Vector v, double scalar){
 
 //Plane intersection
 
-/*
-double findIntersection(Ray ray,Plane p){
+
+/*double findIntersection(Ray ray,Plane p){
 	Vector ray_direction = ray.direction;
 
 	double a = dotProduct(ray_direction,p.);
@@ -331,15 +341,14 @@ double findIntersection(Ray ray,Plane p){
 		Vector temp3;
 		double b;
 		temp = ray.origin;
-		temp2 = p.normal;
+		temp2 = normalize(p);
 		temp3 = multVectors(temp2,p.distance);
 		temp2 = negative(temp3);
 		addVectors(temp, temp2);
 		b = dotProduct(p.normal,temp);
 		return -1*b/a;
 	}
-}
-*/
+}*/
 
 double findSphereIntersection(Ray ray, Sphere* sphere){
 	/*findSphere intersection, finds the intersection between
@@ -393,6 +402,23 @@ double testFindSphere (Ray ray, Sphere* sphere){
 			return t1;
 		}
 	}
+}
+
+//Planes
+
+double findPlaneIntersection(Ray ray, Plane* plane){	
+	//Calculate Plane normal vector dot Ray origin
+	double a = dotProduct(plane->normal,ray.origin);
+	//if a==0 ray is parrallel
+	if (a == 0){
+		return -1;
+	} else {
+		double b;
+		double t;
+		b = dotProduct(plane->normal, ray.direction);
+		t = -1*a/b;	
+		return t;
+	}	
 }
 
 
@@ -449,7 +475,7 @@ void rayTrace(){
 	Vector camdown;
 	Vector originVec;
 	Sphere sphere;
-	Plane plane;	
+	Plane *plane;	
 	Vector cam_ray_origin;
 	Vector cam_ray_direction;
 	Ray camera_ray;
@@ -496,7 +522,14 @@ void rayTrace(){
 
 	campos.x = 3;
 	campos.y = 1.5;
-	campos.z = 0;
+	//campos.z = -10000;
+	campos.z = -10000;
+	//campos.z = -1000;
+
+	/*campos.x = 3;
+	campos.y = 1.5;
+	campos.z = -4;*/
+	
 
 	look_at.x = 0;
 	look_at.y = 0;
@@ -557,8 +590,30 @@ void rayTrace(){
 
 	aspectratio = (double)screenWidth/(double)screenWidth;
 
+	//Plane stuff
+	//Need to be part of file reader
+
+	plane = (Plane*)malloc(sizeof (struct Plane));
+	
+	plane->normal.x = Y.x;
+	plane->normal.y = Y.y;
+	plane->normal.z = Y.z;
+
+	plane->distance = -1;
+
+	plane->col = planeColor;
+
+	//debugg
+
+	printf("\n");
+	printf("plane stuff normal x %f",plane->normal.x);
+	printf("\n");
+	printf("plane stuff normal y %f",plane->normal.y);
+	printf("\n");
+	printf("plane stuff normal z %f",plane->normal.z);
+
 	//DEBUG STUFF
-	global.sph->col = green;
+	/*global.sph->col = green;
 
 	printf("\n");
 	printf("sphere.x %f",global.sph->pos.x);
@@ -574,7 +629,9 @@ void rayTrace(){
 	printf("sphere.color.g %f",global.sph->col.g);
 	printf("\n");
 	printf("sphere.color.b %f",global.sph->col.b);
-	printf("\n");
+	printf("\n");*/
+
+
 
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
@@ -586,7 +643,8 @@ void rayTrace(){
 
 			p.x = i;
 			p.y = j;			
-			p.z = 0; //Need to determine proper z value
+			//p.z = -5000; //Need to determine proper z value
+			p.z = 2000;
 			
 			//direction of ray
 			//image is square
@@ -657,7 +715,9 @@ void rayTrace(){
 			//testingVar = testFindSphere(camera_ray,sphere);
 			//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
 			//intersectionT = testFindSphere(camera_ray,global.sph);
-			intersectionT = findSphereIntersection(camera_ray,global.sph);
+			//intersectionT = testFindSphere(camera_ray,global.sph);
+			
+			intersectionT = findPlaneIntersection(camera_ray,global.pla);			
 			if (intersectionT>0){
 				//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
 				//printf("Sphere Intersection=%f\n", intersectionT);
@@ -673,7 +733,8 @@ void rayTrace(){
 				printf("raySphereInterscetion.z %f",raySphereIntersection.z);
 				printf("\n");
 
-				glColor3f(global.sph->col.r, global.sph->col.g, global.sph->col.b);
+				//glColor3f(global.sph->col.r, global.sph->col.g, global.sph->col.b);
+				glColor3f(global.pla->col.r, global.pla->col.g, global.pla->col.b);
 				glBegin(GL_POINTS);
 				glVertex3f(raySphereIntersection.x,raySphereIntersection.y,raySphereIntersection.z);
 				glEnd();
@@ -709,7 +770,14 @@ main(int argc, char **argv)
 	//glDepthFunc(GL_LESS);
 	//glLoadIdentity();
 
-	 glOrtho(-10, 10, -10, 10, -1.0, 1.0);
+	glOrtho(0, screenWidth, 0, screenWidth, -100000, 1000);//old working orth
+
+	//glOrtho(0, screenWidth, 0, screenWidth, -1000, 100);
+
+	//glOrtho(-10, 10, -10, 10, -1.0, 1.0);
+
+	//gluOrtho2D(0,500,0,500);
+
 	//glOrtho(-5,screenWidth,-5,screenWidth,0,10);
 	//gluPerspective(20, screenWidth/screenWidth, 0.1, 1500);
 	//gluLookAt(900, 250, 800, 0, 0, 0, 0, 1, 0);
