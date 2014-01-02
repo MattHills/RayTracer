@@ -563,6 +563,7 @@ void rayTrace(pixel* Im){
 	campos.z = -10;
 	//campos.z = -1000;
 
+
 	/*campos.x = 3;
 	campos.y = 1.5;
 	campos.z = -4;*/
@@ -641,15 +642,14 @@ void rayTrace(pixel* Im){
 	plane->col = planeColor;
 
 	//debugg
-
-	/*
+	
 	printf("\n");
 	printf("plane stuff normal x %f",plane->normal.x);
 	printf("\n");
 	printf("plane stuff normal y %f",plane->normal.y);
 	printf("\n");
 	printf("plane stuff normal z %f",plane->normal.z);
-	*/
+	
 
 	//DEBUG STUFF
 	/*global.sph->col = green;
