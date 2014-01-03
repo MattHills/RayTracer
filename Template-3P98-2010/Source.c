@@ -123,11 +123,17 @@ typedef struct Cylinder{
 
 typedef struct Triangle {
 	int id;
-	Position pos;
+	Position A;
+	Position B;
+	Position C;
+	Position normal;
+	double distance;
+	Colour color;
+	/*Position pos;
 	Size size;
 	Angle ang;
 	Colour col;	
-	MaterialEffects eff;
+	MaterialEffects eff;*/
 	struct Triangle *next;
 } Triangle;
 
@@ -336,7 +342,6 @@ void readFile(){
 	}	
 }
 
-
 //Position functions
 
 double magnitude (Position v){
@@ -495,6 +500,109 @@ double findPlaneIntersection(Ray ray, Plane* plane){
 	}	
 }
 
+//Triangle stuff
+
+double findTriangleIntersection(Ray ray,Triangle* t){
+
+
+	double a = dotProduct(ray.direction,t->normal);
+	if (a == 0){//ray is parrallel to plane	
+		return -1;
+	}else{
+		double b;
+		double distanceToPlane;
+		double Qx, Qy, Qz;
+		double test1, test2, test3;
+		Position Q;
+		Position temp;
+		Position multTemp;
+		Position CA;
+		Position QA;
+		Position BC;
+		Position QC;
+		Position AB;
+		Position QB;
+		temp = ray.origin;
+		multTemp = multPositions(t->normal,t->distance);
+		multTemp = negative(multTemp);
+		temp = addPositions(t->normal, temp);
+		b = dotProduct(t->normal, temp);
+
+		distanceToPlane = -1*b/a;
+
+		Qx = (multPositions(ray.direction, distanceToPlane)).x + ray.origin.x;
+		Qy = (multPositions(ray.direction, distanceToPlane)).y + ray.origin.y;
+		Qz = (multPositions(ray.direction, distanceToPlane)).z + ray.origin.z;
+
+		Q.x = Qx;
+		Q.y = Qy;
+		Q.z = Qz;
+
+		// [CAxQA]*n>=0
+		CA.x = t->C.x - t->A.x;
+		CA.y = t->C.y - t->A.y;
+		CA.z = t->C.z - t->A.z;
+
+		QA.x = Q.x - t->A.x;
+		QA.y = Q.y - t->A.y;
+		QA.z = Q.z - t->A.z;
+
+		test1 = dotProduct(crossProd(CA, QA),t->normal);		
+		// [BCxQC]*n>=0
+		BC.x = t->B.x - t->C.x;
+		BC.y = t->B.y - t->C.y;
+		BC.z = t->B.z - t->C.z;
+
+		QC.x = Q.x - t->C.x;
+		QC.y = Q.y - t->C.y;
+		QC.z = Q.z - t->C.z;
+
+		test2 = dotProduct(crossProd(BC, QC),t->normal);	
+		// [ABxQB]*n>=0
+		AB.x = t->A.x - t->B.x;
+		AB.y = t->A.y - t->B.y;
+		AB.z = t->A.z - t->B.z;
+
+		QB.x = Q.x - t->B.x;
+		QB.y = Q.y - t->B.y;
+		QB.z = Q.z - t->B.z;
+
+		test3 = dotProduct(crossProd(AB, QB),t->normal);
+		//test if inside triangle
+		if ((test1 >= 0) && (test2 >= 0) && (test3 >= 0)){
+			//inside triangle
+			return -1*b/a;
+		} else {
+			return -1;//outside triangle
+		}		
+	}
+}
+
+Position getTriangleNormal(Position A, Position B, Position C, Colour c){
+	Position CA;
+	Position BA;
+	Position normal;
+	CA.x = C.x - A.x;
+	CA.y = C.y - A.y;
+	CA.z = C.z - A.z;
+	BA.x = B.x - A.x;
+	BA.y = B.y - A.y;
+	BA.z = B.z - A.z;
+	normal = crossProd(CA, BA);
+	normal = normalize(normal);
+	return normal;
+}//return normal of triangle
+
+double getTriangleDistance(Triangle t){
+	double distance;
+	distance = dotProduct(t.normal, t.A);
+}
+
+Position getNormalAt(Triangle t){
+	return t.normal;
+}
+
+
 
 /*
 ray details sheet
@@ -628,7 +736,8 @@ void rayTrace(pixel* Im){
 	Position camdown;
 	Position originVec;
 	Sphere sphere;
-	Plane* plane;	
+	Plane* plane;
+	Triangle* triangle;	
 	Position cam_ray_origin;
 	Position cam_ray_direction;
 	Ray camera_ray;
@@ -763,7 +872,27 @@ void rayTrace(pixel* Im){
 
 	plane->col = green;
 
-	//debugg
+	//Triangle stuff
+
+	triangle = (Triangle*)malloc(sizeof (struct Triangle));
+
+	triangle->A.x = 320;
+	triangle->A.y = 320;
+	triangle->A.z = 520;
+
+	triangle->B.x = 320;
+	triangle->B.y = 420;
+	triangle->B.z = 520;
+
+	triangle->C.x = 320;
+	triangle->C.y = 320;
+	triangle->C.z = 420;
+
+	triangle->color.r = 0;
+	triangle->color.b = 255;
+	triangle->color.g = 0;
+
+
 	
 	/*printf("\n");
 	printf("plane stuff normal x %f",plane->normal.x);
@@ -796,6 +925,7 @@ void rayTrace(pixel* Im){
 		for (j = 0;j<screenWidth;j++){		
 			double intersectionT;
 			double planeIntersection;
+			double triangleIntersection;
 			float r,g,b;
 			float r2,g2,b2;
 						
@@ -883,7 +1013,14 @@ void rayTrace(pixel* Im){
 			
 			planeIntersection = findIntersection(camera_ray, plane);
 
-			if (planeIntersection>0){
+			triangleIntersection = findTriangleIntersection(camera_ray, triangle);
+
+			if (triangleIntersection > 0){
+				Im[i+j*screenWidth].r = 0;
+				Im[i+j*screenWidth].b = 255;
+				Im[i+j*screenWidth].g = 0;
+			}
+			if (planeIntersection>0){				
 				Im[i+j*screenWidth].r = 0;
 				Im[i+j*screenWidth].b = 0;
 				Im[i+j*screenWidth].g = 255;
