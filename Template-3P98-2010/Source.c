@@ -658,8 +658,21 @@ float calculateDiffuse(float colour, Position lightToHitPoint, Position hitPoint
 	return colour * (Is * Rd * a);
 }
 
-float calculateSpecular(float colour, Position eyeRay, Position reflectionRay, float lightSourceColour, float Is, float Rs, float f){
-	return colour * (lightSourceColour * Is * Rs * (pow(dotProduct(reflectionRay,eyeRay),f)));
+float calculateSpecular(float colour, Position lightRay, Position reflectionRay, float lightSourceColour, float Is, float Rs, float f){
+	float ret;
+	/*
+	lightRay.x *= -1;
+	lightRay.y *= -1;
+	lightRay.z *= -1;
+	*/
+	ret = dotProduct(lightRay,reflectionRay);
+	if(ret < 0){
+		ret = 0;
+	}
+	ret = pow(ret,f);
+	ret *= Is * Rs;
+
+	return colour * ret;
 }
 
 Colour clipColour(Colour colour){
@@ -716,7 +729,7 @@ Position getReflectionRay(Position campos, Position hitPoint, Position normal){
 	eyeRay.x = eyeRay.x - 2 * dotProd * normal.x;
 	eyeRay.y = eyeRay.y - 2 * dotProd * normal.y;
 	eyeRay.z = eyeRay.z - 2 * dotProd * normal.z;
-	
+
 	return eyeRay;
 }
 
@@ -1085,12 +1098,12 @@ void rayTrace(pixel* Im){
 							
 							
 							// Specular Calculation
-							/*
+							
 							reflectionRay = getReflectionRay(campos, raySphereIntersection, sphereNormal);
-							r2 += calculateSpecular(testSphere->col.r, campos, reflectionRay, lightSource->col.r, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
-							g2 += calculateSpecular(testSphere->col.g, campos, reflectionRay, lightSource->col.g, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
-							b2 += calculateSpecular(testSphere->col.b, campos, reflectionRay, lightSource->col.b, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
-							*/
+							r2 += calculateSpecular(testSphere->col.r, lightVector, reflectionRay, lightSource->col.r, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+							g2 += calculateSpecular(testSphere->col.g, lightVector, reflectionRay, lightSource->col.g, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+							b2 += calculateSpecular(testSphere->col.b, lightVector, reflectionRay, lightSource->col.b, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+							
 
 							r += r2;
 							g += g2;
