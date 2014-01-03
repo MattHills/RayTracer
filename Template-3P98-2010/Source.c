@@ -13,14 +13,6 @@ typedef struct {
 	GLubyte r, g, b;
 } pixel;
 
-typedef struct Vector {
-	//Vector values
-	//still need to normalize
-   float x, y, z;
-   float magnitude;
-   float normalize;
-} Vector;
-
 typedef struct MaterialEffects{
 	float trans;
 	float Ra;
@@ -527,7 +519,7 @@ transparency:
 
 float calculateAmbient(float colour, float lightSourceColour, float Ia, float Ra){
 	float ret;
-	ret =  Ia * Ra * lightSourceColour;
+	ret =  Ia * Ra;
 
 	return colour * Ra;
 }
@@ -555,7 +547,7 @@ float calculateDiffuse(float colour, Position lightToHitPoint, Position hitPoint
 		return 0;
 	}
 	*/
-	return colour * (lightSourceColour * Is * Rd * a);
+	return colour * (Is * Rd * a);
 }
 
 float calculateSpecular(float colour, Position eyeRay, Position reflectionRay, float lightSourceColour, float Is, float Rs, float f){
@@ -566,7 +558,7 @@ Colour clipColour(Colour colour){
 	float total = colour.r + colour.g + colour.b;
 	float extra = total - 255 * 3;
 
-	/*if(extra > 0){
+	if(extra > 0){
 		colour.r = colour.r*(colour.r/total);
 		colour.g = colour.g*(colour.g/total);
 		colour.b = colour.b*(colour.b/total);
@@ -589,7 +581,7 @@ Colour clipColour(Colour colour){
 	if(colour.g < 0){
 		colour.g = 0;
 	}
-	*/
+	
 	return colour;
 }
 
@@ -598,7 +590,7 @@ Position getSphereNormal(Position sphereCenter, Position hitPoint){
 	Position v;	
 	v.x = hitPoint.x - sphereCenter.x;
 	v.y = hitPoint.y - sphereCenter.y;
-	v.y = hitPoint.z - sphereCenter.z;	
+	v.z = hitPoint.z - sphereCenter.z;	
 	v = normalize(v);
 	return v;
 }
@@ -610,6 +602,7 @@ Position getReflectionRay(Position campos, Position hitPoint, Position normal){
 	eyeRay.x = hitPoint.x - campos.x;
 	eyeRay.y = hitPoint.y - campos.y;
 	eyeRay.z = hitPoint.z - campos.z;
+	eyeRay = normalize(eyeRay);
 
 	dotProd = dotProduct(normal, eyeRay);
 	eyeRay.x = eyeRay.x - 2 * dotProd * normal.x;
@@ -617,19 +610,6 @@ Position getReflectionRay(Position campos, Position hitPoint, Position normal){
 	eyeRay.z = eyeRay.z - 2 * dotProd * normal.z;
 	
 	return eyeRay;
-}
-
-
-void redraw(){	
-	
-	glColor3f(0.5,0.5,0.5);
-
-	glBegin(GL_POLYGON);
-			glVertex3i(1, 1, 0);
-			glVertex3i(1, 4, 0);
-			glVertex3i(4, 4, 0);
-			glVertex3i(4, 1, 0);
-	glEnd();
 }
 
 void rayTrace(pixel* Im){
