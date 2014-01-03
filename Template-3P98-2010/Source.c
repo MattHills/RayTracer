@@ -778,9 +778,9 @@ void rayTrace(pixel* Im){
 			
 				//intersectionT = findPlaneIntersection(camera_ray,global.pla);			
 				if (planeIntersection>0){
-					Im[i+j*screenWidth].r = 0;
-					Im[i+j*screenWidth].b = 0;
-					Im[i+j*screenWidth].g = 255;
+					Im[i+j*screenWidth].r = 189;
+					Im[i+j*screenWidth].b = 90;
+					Im[i+j*screenWidth].g = 230;
 				}
 				if (intersectionT>0){
 					//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
