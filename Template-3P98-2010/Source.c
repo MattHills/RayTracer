@@ -13,10 +13,6 @@ typedef struct {
 	GLubyte r, g, b;
 } pixel;
 
-typedef struct {
-	float val;
-} Transparency;
-
 typedef struct Vector {
 	//Vector values
 	//still need to normalize
@@ -66,7 +62,10 @@ typedef struct Donut {
 	Radius rad;
 	Angle ang;
 	Colour col;
-	Transparency trans;
+	float trans;
+	float amb;
+	float dif;
+	float spec;
 	struct Donut *next;
 } Donut;
 
@@ -98,7 +97,10 @@ typedef struct Sphere {
 	Radius rad;
 	Angle ang;
 	Colour col;
-	Transparency trans;
+	float trans;
+	float amb;
+	float dif;
+	float spec;
 	struct Sphere *next;
 } Sphere;
 
@@ -108,8 +110,11 @@ typedef struct Rect {
 	Position pos;	
 	Size siz;
 	Angle ang;
-	Colour col;
-	Transparency trans;
+	Colour col;	
+	float trans;
+	float amb;
+	float dif;
+	float spec;
 	struct Rect *next;
 } Rect;
 
@@ -120,8 +125,11 @@ typedef struct Cylinder{
 	Size size;
 	Radius rad;	
 	Angle ang;
-	Colour col;
-	Transparency trans;
+	Colour col;	
+	float trans;
+	float amb;
+	float dif;
+	float spec;
 	struct Cylinder *next;
 } Cylinder;
 
@@ -131,7 +139,10 @@ typedef struct Triangle {
 	Size size;
 	Angle ang;
 	Colour col;	
-	Transparency trans;
+	float trans;
+	float amb;
+	float dif;
+	float spec;
 	struct Triangle *next;
 } Triangle;
 
@@ -272,7 +283,13 @@ void readFile(){
 				fscanf(file, "%f", &i);
 				s->col.g = i;
 				fscanf(file, "%f", &i);
-				s->trans.val = i;
+				s->trans = i;
+				fscanf(file, "%f", &i);
+				s->amb = i;
+				fscanf(file, "%f", &i);
+				s->dif = i;
+				fscanf(file, "%f", &i);
+				s->spec = i;
 				s->next = (Sphere*)malloc(sizeof (struct Sphere));
 				s->next = 0;
 
