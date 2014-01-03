@@ -18,12 +18,16 @@ transparency:
 Ra (ambient surface coefficient): 0 <= Ra <= 1
 Rd (material diffuse coefficient): 0 <= Rd <= 1
 Rs (material specular reflection coefficient): 0 <= Rs <= 1
+f is a specular highlight coefficient: (f>=1) 
 use -55 after your shape definition for your assistance
 
 type:8
 x pos:
 y pos:
 z pos:
+colour r:
+colour g:
+colour b:
 Ia intensity of ambient light:
 Is light intensity: 
 
