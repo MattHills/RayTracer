@@ -527,21 +527,70 @@ transparency:
 
 float calculateAmbient(float colour, float lightSourceColour, float Ia, float Ra){
 	float ret;
-	ret = lightSourceColour * Ia * Ra;
-	return colour *ret;
+	ret =  Ia * Ra * lightSourceColour;
+
+	return colour * Ra;
 }
 
 float calculateDiffuse(float colour, Position lightToHitPoint, Position hitPointNormal, Position lightSourcePos, float lightSourceColour, float Is, float Rd){
 	float a;
+	float ret;
 
 	// Get angle from 
 	a = dotProduct(hitPointNormal, lightToHitPoint);
-	
-	return colour * (lightSourceColour * Is * Rd * a);
+	if(a < 0){
+		a = 0;
+	}
+	/*
+	if(a > 0){
+		ret = (colour + (lightSourceColour * Is * Rd * a)) / 2;
+		if(ret > 255){
+			return 255;
+		}
+		else{
+			return ret;
+		}
+	}
+	else{
+		return 0;
+	}
+	*/
+	return colour * (lightSourceColour * Is * Rd * a) / (100);
 }
 
 float calculateSpecular(float colour, Position eyeRay, Position reflectionRay, float lightSourceColour, float Is, float Rs, float f){
 	return colour * (lightSourceColour * Is * Rs * (pow(dotProduct(reflectionRay,eyeRay),f)));
+}
+
+Colour clipColour(Colour colour){
+	float total = colour.r + colour.g + colour.b;
+	float extra = total - 255 * 3;
+
+	/*if(extra > 0){
+		colour.r = colour.r*(colour.r/total);
+		colour.g = colour.g*(colour.g/total);
+		colour.b = colour.b*(colour.b/total);
+	}
+	if(colour.r > 255){
+		colour.r = 255;
+	}
+	if(colour.b > 255){
+		colour.b = 255;
+	}
+	if(colour.g > 255){
+		colour.g = 255;
+	}
+	if(colour.r < 0){
+		colour.r = 0;
+	}
+	if(colour.b < 0){
+		colour.b = 255;
+	}
+	if(colour.g < 0){
+		colour.g = 0;
+	}
+	*/
+	return colour;
 }
 
 
@@ -772,7 +821,8 @@ void rayTrace(pixel* Im){
 						
 			Position p;
 			Position direction;
-			Position raySphereIntersection;
+			Position raySphereIntersection;			
+			Colour calcColour;
 
 			p.x = i;
 			p.y = j;			
@@ -888,6 +938,9 @@ void rayTrace(pixel* Im){
 						r = 0;
 						g = 0;
 						b = 0;
+						r2 = 0;
+						g2 = 0;
+						b2 = 0;
 						lightSource = global.lig;
 						while(lightSource){
 							Position sphereNormal;
@@ -900,29 +953,38 @@ void rayTrace(pixel* Im){
 							lightVector.z = lightSource->pos.z - raySphereIntersection.z;
 							lightVector = normalize(lightVector);
 
+							
 							// Ambient Light Calculation
 							r2 = calculateAmbient(testSphere->col.r, lightSource->col.r, lightSource->Ia, testSphere->eff.Ra);
 							g2 = calculateAmbient(testSphere->col.g, lightSource->col.g, lightSource->Ia, testSphere->eff.Ra);
 							b2 = calculateAmbient(testSphere->col.b, lightSource->col.b, lightSource->Ia, testSphere->eff.Ra);
+						
 							
-							// Diffuse Reflection Calculation							
-							
+							// Diffuse Reflection Calculation
 							sphereNormal = getSphereNormal(testSphere->pos, raySphereIntersection);
 							r2 += calculateDiffuse(testSphere->col.r, lightVector, sphereNormal, lightSource->pos, lightSource->col.r, lightSource->Is, testSphere->eff.Rd);
 							g2 += calculateDiffuse(testSphere->col.g, lightVector, sphereNormal, lightSource->pos, lightSource->col.g, lightSource->Is, testSphere->eff.Rd);
 							b2 += calculateDiffuse(testSphere->col.b, lightVector, sphereNormal, lightSource->pos, lightSource->col.b, lightSource->Is, testSphere->eff.Rd);
-
-							//r2 += calculateSpecular
+							
+							
+							// Specular Calculation
+							/*
 							reflectionRay = getReflectionRay(campos, raySphereIntersection, sphereNormal);
 							r2 += calculateSpecular(testSphere->col.r, campos, reflectionRay, lightSource->col.r, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
 							g2 += calculateSpecular(testSphere->col.g, campos, reflectionRay, lightSource->col.g, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
 							b2 += calculateSpecular(testSphere->col.b, campos, reflectionRay, lightSource->col.b, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+							*/
 
 							r += r2;
 							g += g2;
 							b += b2;
 							lightSource = lightSource->next;
-						}
+						}						
+						/*
+						r *= testSphere->col.r;
+						g *= testSphere->col.g;
+						b *= testSphere->col.b;
+						*/
 					}
 					else{
 						r = testSphere->col.r;
@@ -930,9 +992,15 @@ void rayTrace(pixel* Im){
 						b = testSphere->col.b;
 					}
 
-					Im[i+j*screenWidth].r = r;					
-					Im[i+j*screenWidth].g = g;
-					Im[i+j*screenWidth].b = b;
+					calcColour.r = r;
+					calcColour.g = g;
+					calcColour.b = b;
+
+					calcColour = clipColour(calcColour);
+
+					Im[i+j*screenWidth].r = calcColour.r;					
+					Im[i+j*screenWidth].g = calcColour.g;
+					Im[i+j*screenWidth].b = calcColour.b;
 				}
 				testSphere = testSphere->next;
 			}
