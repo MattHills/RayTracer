@@ -19,7 +19,15 @@ typedef struct Vector {
    float x, y, z;
    float magnitude;
    float normalize;
-}Vector;
+} Vector;
+
+typedef struct MaterialEffects{
+	float trans;
+	float Ra;
+	float Rd;
+	float Rs;
+	float f;
+} MaterialEffects;
 
 // To angle on the shapes
 typedef struct {
@@ -62,10 +70,7 @@ typedef struct Donut {
 	Radius rad;
 	Angle ang;
 	Colour col;
-	float trans;
-	float amb;
-	float dif;
-	float spec;
+	MaterialEffects eff;
 	struct Donut *next;
 } Donut;
 
@@ -76,7 +81,7 @@ typedef struct Plane {
 	Size siz;
 	Angle ang;	
 	Transparency trans;*/
-	Vector normal;
+	Position normal;
 	double distance;
 	Colour col;
 	struct Plane *next;
@@ -97,10 +102,7 @@ typedef struct Sphere {
 	Radius rad;
 	Angle ang;
 	Colour col;
-	float trans;
-	float amb;
-	float dif;
-	float spec;
+	MaterialEffects eff;
 	struct Sphere *next;
 } Sphere;
 
@@ -111,10 +113,7 @@ typedef struct Rect {
 	Size siz;
 	Angle ang;
 	Colour col;	
-	float trans;
-	float amb;
-	float dif;
-	float spec;
+	MaterialEffects eff;
 	struct Rect *next;
 } Rect;
 
@@ -126,10 +125,7 @@ typedef struct Cylinder{
 	Radius rad;	
 	Angle ang;
 	Colour col;	
-	float trans;
-	float amb;
-	float dif;
-	float spec;
+	MaterialEffects eff;
 	struct Cylinder *next;
 } Cylinder;
 
@@ -139,12 +135,18 @@ typedef struct Triangle {
 	Size size;
 	Angle ang;
 	Colour col;	
-	float trans;
-	float amb;
-	float dif;
-	float spec;
+	MaterialEffects eff;
 	struct Triangle *next;
 } Triangle;
+
+typedef struct LightSource{
+	int id;
+	Position pos;
+	Colour col;
+	float Ia;
+	float Is;
+	struct LightSource *next;
+} LightSource;
 
 //the global structure
 typedef struct {
@@ -153,6 +155,7 @@ typedef struct {
 	struct Sphere *sph;
 	struct Plane *pla;
 	struct Donut *don;
+	struct LightSource *lig;
 	pixel *data;
 	pixel *tempData;
 } glob;
@@ -166,16 +169,16 @@ glob global;
 //crossproduct
 
 typedef struct Ray{
-	struct Vector origin;
-	struct Vector direction;
+	 Position origin;
+	 Position direction;
 } Ray;
 
 typedef struct Camera{
 	//Coord for scene for perspective
-	struct Vector campos;
-	struct Vector campdir;
-	struct Vector camright;
-	struct Vector camdown;
+	Position campos;
+	Position campdir;
+	Position camright;
+	Position camdown;
 } Camera;
 
 /*typedef struct Color {
@@ -186,7 +189,7 @@ typedef struct Camera{
 
 typedef struct Light{
 	struct Colour c;//color
-	struct Vector v;//position
+	Position v;//position
 } Light;
 
 typedef struct Object{
@@ -253,6 +256,7 @@ void readFile(){
 	FILE *file;
 	float i;
 	Sphere *s;
+	LightSource *l;
 
 	//file = fopen("C:\3P98\3P98 Final Project\Ray Tracer\RayTracer\raydetails.txt","r");
 	file = fopen("raydetails.txt","r");
@@ -283,13 +287,15 @@ void readFile(){
 				fscanf(file, "%f", &i);
 				s->col.g = i;
 				fscanf(file, "%f", &i);
-				s->trans = i;
+				s->eff.trans = i;
 				fscanf(file, "%f", &i);
-				s->amb = i;
+				s->eff.Ra = i;
 				fscanf(file, "%f", &i);
-				s->dif = i;
+				s->eff.Rd = i;
 				fscanf(file, "%f", &i);
-				s->spec = i;
+				s->eff.Rs = i;
+				fscanf(file, "%f", &i);
+				s->eff.f = i;
 				s->next = (Sphere*)malloc(sizeof (struct Sphere));
 				s->next = 0;
 
@@ -301,7 +307,36 @@ void readFile(){
 					s->next = global.sph;
 					global.sph = s;
 				}
-				//free(s);
+			}
+			else if(i == 8){
+				l = (LightSource*)malloc(sizeof (struct LightSource));
+				fscanf(file, "%f", &i);
+				l->pos.x = i;
+				fscanf(file, "%f", &i);
+				l->pos.y = i;
+				fscanf(file, "%f", &i);
+				l->pos.z = i;			
+				fscanf(file, "%f", &i);
+				l->col.r = i;	
+				fscanf(file, "%f", &i);
+				l->col.g = i;	
+				fscanf(file, "%f", &i);
+				l->col.b = i;	
+				fscanf(file, "%f", &i);
+				l->Ia = i;
+				fscanf(file, "%f", &i);
+				l->Is = i;
+				l->next = (LightSource*)malloc(sizeof (struct LightSource));
+				l->next = 0;
+
+				if(!global.lig){
+					global.lig = (LightSource*)malloc(sizeof (struct LightSource));
+					global.lig = l;
+				}
+				else{
+					l->next = global.lig;
+					global.lig = l;
+				}
 			}
 			fscanf(file, "%f", &i);
 		}
@@ -310,50 +345,50 @@ void readFile(){
 }
 
 
-//Vector functions
+//Position functions
 
-double magnitude (Vector v){
+double magnitude (Position v){
 	return (sqrt((v.x*v.x) + (v.y*v.y) + (v.z*v.z)));
-}//returns magnitude of a vector
+}//returns magnitude of a Position
 
-Vector normalize (Vector v){
-	Vector temp;
+Position normalize (Position v){
+	Position temp;
 	temp.x = v.x/magnitude(v);
 	temp.y = v.y/magnitude(v);
 	temp.z = v.z/magnitude(v);
 	return temp;
-}//normalize a vector
+}//normalize a Position
 
-Vector negative (Vector v){
-	Vector temp;
+Position negative (Position v){
+	Position temp;
 	temp.x = -v.x;
 	temp.y = -v.y;
 	temp.z = -v.z;
 	return temp;
-}//negative of a vector
+}//negative of a Position
 
-double dotProduct(Vector v, Vector c){
+float dotProduct(Position v, Position c){
 	return (v.x*c.x + v.y*c.y + v.z*c.z);
-}//dotProdcut of two vectors v and c
+}//dotProdcut of two Positions v and c
 
-Vector crossProd(Vector v, Vector c){
-	Vector temp;
+Position crossProd(Position v, Position c){
+	Position temp;
 	temp.x = (v.y*c.z-v.z*c.y);
 	temp.y = (v.z*c.x-v.x*c.z);
 	temp.z = (v.x*c.y-v.y*c.x);
 	return temp;
-}//returns the cross prod of two vectors
+}//returns the cross prod of two Positions
 
 
-/*void addVectors(Vector v, Vector c){
+/*void addPositions(Position v, Position c){
 	v.x = v.x+c.x;
 	v.y = v.y+c.y;
 	v.z = v.z+c.z;
 }*/
-//addtion of vector v and c
-//sets Vector v's coord to the new vector created
-Vector addVectors(Vector v, Vector c){
-	Vector temp;
+//addtion of Position v and c
+//sets Position v's coord to the new Position created
+Position addPositions(Position v, Position c){
+	Position temp;
 	temp.x = v.x+c.x;
 	temp.y = v.y+c.y;
 	temp.z = v.z+c.z;
@@ -361,16 +396,16 @@ Vector addVectors(Vector v, Vector c){
 }
 
 
-/*void multVectors(Vector v, double scalar){
+/*void multPositions(Position v, double scalar){
 	v.x = v.x*scalar;
 	v.y = v.y*scalar;
 	v.z = v.z*scalar;
 }*/
-//multiple of vector v and scalar value
-//sets Vector v's coord to the new vector created
+//multiple of Position v and scalar value
+//sets Position v's coord to the new Position created
 
-Vector multVectors(Vector v, double scalar){
-	Vector temp;
+Position multPositions(Position v, double scalar){
+	Position temp;
 	temp.x = v.x*scalar;
 	temp.y = v.y*scalar;
 	temp.z = v.z*scalar;
@@ -386,12 +421,12 @@ double findIntersection(Ray ray,Plane* p){
 		return -1;
 	}else{
 		double b;
-		Vector temp;
-		Vector multTemp;
+		Position temp;
+		Position multTemp;
 		temp = ray.origin;
-		multTemp = multVectors(p->normal,p->distance);
+		multTemp = multPositions(p->normal,p->distance);
 		multTemp = negative(multTemp);
-		temp = addVectors(p->normal, temp);
+		temp = addPositions(p->normal, temp);
 		b = dotProduct(p->normal, temp);
 		return -1*b/a;
 	}
@@ -454,8 +489,8 @@ double testFindSphere (Ray ray, Sphere* sphere){
 //Planes
 
 double findPlaneIntersection(Ray ray, Plane* plane){	
-	//Calculate Plane normal vector dot Ray origin
-	double a = dotProduct(plane->normal,ray.origin);
+	//Calculate Plane normal Position dot Ray origin
+	float a = dotProduct(plane->normal,ray.origin);
 	//if a==0 ray is parrallel
 	if (a == 0){
 		return -1;
@@ -490,9 +525,51 @@ transparency:
 
 */
 
-void drawShapes(){
-
+float calculateAmbient(float colour, float lightSourceColour, float Ia, float Ra){
+	float ret;
+	ret = lightSourceColour * Ia * Ra;
+	return colour *ret;
 }
+
+float calculateDiffuse(float colour, Position lightToHitPoint, Position hitPointNormal, Position lightSourcePos, float lightSourceColour, float Is, float Rd){
+	float a;
+
+	// Get angle from 
+	a = dotProduct(hitPointNormal, lightToHitPoint);
+	
+	return colour * (lightSourceColour * Is * Rd * a);
+}
+
+float calculateSpecular(float colour, Position eyeRay, Position reflectionRay, float lightSourceColour, float Is, float Rs, float f){
+	return colour * (lightSourceColour * Is * Rs * (pow(dotProduct(reflectionRay,eyeRay),f)));
+}
+
+
+Position getSphereNormal(Position sphereCenter, Position hitPoint){
+	Position v;	
+	v.x = hitPoint.x - sphereCenter.x;
+	v.y = hitPoint.y - sphereCenter.y;
+	v.y = hitPoint.z - sphereCenter.z;	
+	v = normalize(v);
+	return v;
+}
+
+Position getReflectionRay(Position campos, Position hitPoint, Position normal){
+	Position eyeRay;
+	float dotProd;
+
+	eyeRay.x = hitPoint.x - campos.x;
+	eyeRay.y = hitPoint.y - campos.y;
+	eyeRay.z = hitPoint.z - campos.z;
+
+	dotProd = dotProduct(normal, eyeRay);
+	eyeRay.x = eyeRay.x - 2 * dotProd * normal.x;
+	eyeRay.y = eyeRay.y - 2 * dotProd * normal.y;
+	eyeRay.z = eyeRay.z - 2 * dotProd * normal.z;
+	
+	return eyeRay;
+}
+
 
 void redraw(){	
 	
@@ -514,33 +591,34 @@ void rayTrace(pixel* Im){
 	double xamount;
 	double yamount;
 	Camera camera;
-	Vector X,Y,Z;
-	Vector look_at;
-	Vector diff_btw;
-	Vector camdir;
-	Vector camright;
-	Vector camdown;
-	Vector originVec;
+	Position X,Y,Z;
+	Position look_at;
+	Position diff_btw;
+	Position camdir;
+	Position camright;
+	Position camdown;
+	Position originVec;
 	Sphere sphere;
 	Plane* plane;	
-	Vector cam_ray_origin;
-	Vector cam_ray_direction;
+	Position cam_ray_origin;
+	Position cam_ray_direction;
 	Ray camera_ray;
 	Sphere *testSphere;
+	LightSource *lightSource;
 
-	//temp vectors	
+	//temp Positions	
 
-	Vector innerTemp;
-	Vector innerTemp2;
-	Vector innerTemp3;
+	Position innerTemp;
+	Position innerTemp2;
+	Position innerTemp3;
 
 	Colour white;
 	Colour green;
 	Colour black;
 	Colour planeColor;
 
-	Vector light_pos;
-	Vector campos;
+	Position light_pos;
+	Position campos;
 	Light scene_light;
 
 	//glClear(GL_COLOR_BUFFER_BIT);
@@ -631,7 +709,7 @@ void rayTrace(pixel* Im){
 	originVec.y = 0;
 	originVec.z = 0;
 
-	//Scene light is white with vector or position
+	//Scene light is white with Position or position
 	scene_light.c = white;
 	scene_light.v = light_pos;
 
@@ -685,103 +763,104 @@ void rayTrace(pixel* Im){
 	printf("sphere.color.b %f",global.sph->col.b);
 	printf("\n");*/
 
-	testSphere = global.sph;
-
-	while(testSphere != NULL){
-		for (i = 0;i<screenWidth;i++){
-			for (j = 0;j<screenWidth;j++){		
-				double intersectionT;
-				double planeIntersection;
+	for (i = 0;i<screenWidth;i++){
+		for (j = 0;j<screenWidth;j++){		
+			double intersectionT;
+			double planeIntersection;
+			float r,g,b;
+			float r2,g2,b2;
 						
-				Vector p;
-				Vector direction;
-				Vector raySphereIntersection;
+			Position p;
+			Position direction;
+			Position raySphereIntersection;
 
-				p.x = i;
-				p.y = j;			
-				//p.z = -5000; //Need to determine proper z value
-				p.z = 1000;
+			p.x = i;
+			p.y = j;			
+			//p.z = -5000; //Need to determine proper z value
+			p.z = 1000;
 			
-				//direction of ray
-				//image is square
-				/*xamount = (i+0.5)/screenWidth;
-				yamount = ((screenWidth - j)+0.5)/screenWidth;
-				cam_ray_origin = camera.campos;
-				innerTemp3 = camright;
-				multVectors(innerTemp3,(xamount-0.5));
-				innerTemp = camdir;
-				addVectors(innerTemp, innerTemp3);
-				innerTemp2 = camdown;
-				multVectors(innerTemp2,(yamount-0.5));
-				innerTemp2 = normalize(innerTemp2);
-				addVectors(innerTemp, innerTemp2);
-				camera_ray.origin = cam_ray_origin;
-				camera_ray.direction = innerTemp;*/
+			//direction of ray
+			//image is square
+			/*xamount = (i+0.5)/screenWidth;
+			yamount = ((screenWidth - j)+0.5)/screenWidth;
+			cam_ray_origin = camera.campos;
+			innerTemp3 = camright;
+			multPositions(innerTemp3,(xamount-0.5));
+			innerTemp = camdir;
+			addPositions(innerTemp, innerTemp3);
+			innerTemp2 = camdown;
+			multPositions(innerTemp2,(yamount-0.5));
+			innerTemp2 = normalize(innerTemp2);
+			addPositions(innerTemp, innerTemp2);
+			camera_ray.origin = cam_ray_origin;
+			camera_ray.direction = innerTemp;*/
 
-				innerTemp.x = 0;
-				innerTemp.y = 0;
-				innerTemp.z = 0;
+			innerTemp.x = 0;
+			innerTemp.y = 0;
+			innerTemp.z = 0;
 
-				innerTemp2.x = 0;
-				innerTemp2.y = 0;
-				innerTemp2.z = 0;
+			innerTemp2.x = 0;
+			innerTemp2.y = 0;
+			innerTemp2.z = 0;
 
-				innerTemp3.x = 0;
-				innerTemp3.y = 0;
-				innerTemp3.z = 0;
+			innerTemp3.x = 0;
+			innerTemp3.y = 0;
+			innerTemp3.z = 0;
 
-				xamount = (i+0.5)/screenWidth;
-				yamount = ((screenWidth-j)+0.5)/screenWidth;
-				cam_ray_origin = camera.campos;
-				innerTemp3 = camright;
-				innerTemp3 = multVectors(innerTemp3,(xamount-0.5));
-				innerTemp = camdir;
-				innerTemp = addVectors(innerTemp, innerTemp3);
-				innerTemp2 = camdown;
-				innerTemp3 = multVectors(innerTemp2,(yamount-0.5));
-				innerTemp2 = normalize(innerTemp2);
-				innerTemp = addVectors(innerTemp, innerTemp2);
-				camera_ray.origin = cam_ray_origin;
-				//camera_ray.direction = innerTemp;
+			xamount = (i+0.5)/screenWidth;
+			yamount = ((screenWidth-j)+0.5)/screenWidth;
+			cam_ray_origin = camera.campos;
+			innerTemp3 = camright;
+			innerTemp3 = multPositions(innerTemp3,(xamount-0.5));
+			innerTemp = camdir;
+			innerTemp = addPositions(innerTemp, innerTemp3);
+			innerTemp2 = camdown;
+			innerTemp3 = multPositions(innerTemp2,(yamount-0.5));
+			innerTemp2 = normalize(innerTemp2);
+			innerTemp = addPositions(innerTemp, innerTemp2);
+			camera_ray.origin = cam_ray_origin;
+			//camera_ray.direction = innerTemp;
 
-				direction.x = p.x - camera_ray.origin.x;
-				direction.y = p.y - camera_ray.origin.y;
-				direction.z = p.z - camera_ray.origin.z;
+			direction.x = p.x - camera_ray.origin.x;
+			direction.y = p.y - camera_ray.origin.y;
+			direction.z = p.z - camera_ray.origin.z;
 
-				direction = normalize(direction);		
+			direction = normalize(direction);		
 
-				camera_ray.direction = direction;
+			camera_ray.direction = direction;
 
 
-				//loop through check each pixel for intersection
-				/*printf("%fcamera origin x: ",camera_ray.origin.x);
-				printf("\n");
-				printf("%fcamera origin y: ",camera_ray.origin.y);
-				printf("\n");
-				printf("%fcamera origin z: ",camera_ray.origin.z);
-				printf("\n");
+			//loop through check each pixel for intersection
+			/*printf("%fcamera origin x: ",camera_ray.origin.x);
+			printf("\n");
+			printf("%fcamera origin y: ",camera_ray.origin.y);
+			printf("\n");
+			printf("%fcamera origin z: ",camera_ray.origin.z);
+			printf("\n");
 
-				printf("%fcamera direction x: ",camera_ray.direction.x);
-				printf("\n");
-				printf("%fcamera direction y: ",camera_ray.direction.y);
-				printf("\n");
-				printf("%fcamera direction z: ",camera_ray.direction.z);
-				printf("\n");*/
+			printf("%fcamera direction x: ",camera_ray.direction.x);
+			printf("\n");
+			printf("%fcamera direction y: ",camera_ray.direction.y);
+			printf("\n");
+			printf("%fcamera direction z: ",camera_ray.direction.z);
+			printf("\n");*/
 
-				//testingVar = testFindSphere(camera_ray,sphere);
-				//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
-				//intersectionT = testFindSphere(camera_ray,global.sph);
-				//intersectionT = testFindSphere(camera_ray,testSphere);
+			//testingVar = testFindSphere(camera_ray,sphere);
+			//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
+			//intersectionT = testFindSphere(camera_ray,global.sph);
+			//intersectionT = testFindSphere(camera_ray,testSphere);
 
+			
+			planeIntersection = findIntersection(camera_ray, plane);
+
+			if (planeIntersection>0){
+				Im[i+j*screenWidth].r = 0;
+				Im[i+j*screenWidth].b = 0;
+				Im[i+j*screenWidth].g = 255;
+			}
+			testSphere = global.sph;
+			while(testSphere){
 				intersectionT = testFindSphere(camera_ray,testSphere);
-				planeIntersection = findIntersection(camera_ray, plane);
-			
-				//intersectionT = findPlaneIntersection(camera_ray,global.pla);			
-				if (planeIntersection>0){
-					Im[i+j*screenWidth].r = 189;
-					Im[i+j*screenWidth].b = 90;
-					Im[i+j*screenWidth].g = 230;
-				}
 				if (intersectionT>0){
 					//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
 					//printf("Sphere Intersection=%f\n", intersectionT);
@@ -804,17 +883,60 @@ void rayTrace(pixel* Im){
 					//glBegin(GL_POINTS);
 					//glVertex3f(raySphereIntersection.x,raySphereIntersection.y,raySphereIntersection.z);
 					//glEnd();
+					
+					if(global.lig){
+						r = 0;
+						g = 0;
+						b = 0;
+						lightSource = global.lig;
+						while(lightSource){
+							Position sphereNormal;
+							Position lightVector;
+							Position reflectionRay;
 
-					Im[i+j*screenWidth].r = testSphere->col.r;
-					Im[i+j*screenWidth].b = testSphere->col.b;
-					Im[i+j*screenWidth].g = testSphere->col.g;
+							// Get Vector normal from light source to hitpoint
+							lightVector.x = lightSource->pos.x - raySphereIntersection.x;
+							lightVector.y = lightSource->pos.y - raySphereIntersection.y;
+							lightVector.z = lightSource->pos.z - raySphereIntersection.z;
+							lightVector = normalize(lightVector);
 
+							// Ambient Light Calculation
+							r2 = calculateAmbient(testSphere->col.r, lightSource->col.r, lightSource->Ia, testSphere->eff.Ra);
+							g2 = calculateAmbient(testSphere->col.g, lightSource->col.g, lightSource->Ia, testSphere->eff.Ra);
+							b2 = calculateAmbient(testSphere->col.b, lightSource->col.b, lightSource->Ia, testSphere->eff.Ra);
+							
+							// Diffuse Reflection Calculation							
+							
+							sphereNormal = getSphereNormal(testSphere->pos, raySphereIntersection);
+							r2 += calculateDiffuse(testSphere->col.r, lightVector, sphereNormal, lightSource->pos, lightSource->col.r, lightSource->Is, testSphere->eff.Rd);
+							g2 += calculateDiffuse(testSphere->col.g, lightVector, sphereNormal, lightSource->pos, lightSource->col.g, lightSource->Is, testSphere->eff.Rd);
+							b2 += calculateDiffuse(testSphere->col.b, lightVector, sphereNormal, lightSource->pos, lightSource->col.b, lightSource->Is, testSphere->eff.Rd);
+
+							//r2 += calculateSpecular
+							reflectionRay = getReflectionRay(campos, raySphereIntersection, sphereNormal);
+							r2 += calculateSpecular(testSphere->col.r, campos, reflectionRay, lightSource->col.r, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+							g2 += calculateSpecular(testSphere->col.g, campos, reflectionRay, lightSource->col.g, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+							b2 += calculateSpecular(testSphere->col.b, campos, reflectionRay, lightSource->col.b, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+
+							r += r2;
+							g += g2;
+							b += b2;
+							lightSource = lightSource->next;
+						}
+					}
+					else{
+						r = testSphere->col.r;
+						g = testSphere->col.g;
+						b = testSphere->col.b;
+					}
+
+					Im[i+j*screenWidth].r = r;					
+					Im[i+j*screenWidth].g = g;
+					Im[i+j*screenWidth].b = b;
 				}
-
-				//printf("\n");
+				testSphere = testSphere->next;
 			}
 		}
-		testSphere = testSphere->next;
 	}
 	//glFlush();
 }
