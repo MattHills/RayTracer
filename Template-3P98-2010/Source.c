@@ -421,12 +421,12 @@ double findIntersection(Ray ray,Plane* p){
 		return -1;
 	}else{
 		double b;
-		Vector temp;
-		Vector multTemp;
+		Position temp;
+		Position multTemp;
 		temp = ray.origin;
-		multTemp = multVectors(p->normal,p->distance);
+		multTemp = multPositions(p->normal,p->distance);
 		multTemp = negative(multTemp);
-		temp = addVectors(p->normal, temp);
+		temp = addPositions(p->normal, temp);
 		b = dotProduct(p->normal, temp);
 		return -1*b/a;
 	}
@@ -763,105 +763,104 @@ void rayTrace(pixel* Im){
 	printf("sphere.color.b %f",global.sph->col.b);
 	printf("\n");*/
 
-	testSphere = global.sph;
-
-	while(testSphere != NULL){
-		for (i = 0;i<screenWidth;i++){
-			for (j = 0;j<screenWidth;j++){		
-				double intersectionT;
-				double planeIntersection;
-				float r,g,b;
-				float r2,g2,b2;
+	for (i = 0;i<screenWidth;i++){
+		for (j = 0;j<screenWidth;j++){		
+			double intersectionT;
+			double planeIntersection;
+			float r,g,b;
+			float r2,g2,b2;
 						
-				Position p;
-				Position direction;
-				Position raySphereIntersection;
+			Position p;
+			Position direction;
+			Position raySphereIntersection;
 
-				p.x = i;
-				p.y = j;			
-				//p.z = -5000; //Need to determine proper z value
-				p.z = 1000;
+			p.x = i;
+			p.y = j;			
+			//p.z = -5000; //Need to determine proper z value
+			p.z = 1000;
 			
-				//direction of ray
-				//image is square
-				/*xamount = (i+0.5)/screenWidth;
-				yamount = ((screenWidth - j)+0.5)/screenWidth;
-				cam_ray_origin = camera.campos;
-				innerTemp3 = camright;
-				multPositions(innerTemp3,(xamount-0.5));
-				innerTemp = camdir;
-				addPositions(innerTemp, innerTemp3);
-				innerTemp2 = camdown;
-				multPositions(innerTemp2,(yamount-0.5));
-				innerTemp2 = normalize(innerTemp2);
-				addPositions(innerTemp, innerTemp2);
-				camera_ray.origin = cam_ray_origin;
-				camera_ray.direction = innerTemp;*/
+			//direction of ray
+			//image is square
+			/*xamount = (i+0.5)/screenWidth;
+			yamount = ((screenWidth - j)+0.5)/screenWidth;
+			cam_ray_origin = camera.campos;
+			innerTemp3 = camright;
+			multPositions(innerTemp3,(xamount-0.5));
+			innerTemp = camdir;
+			addPositions(innerTemp, innerTemp3);
+			innerTemp2 = camdown;
+			multPositions(innerTemp2,(yamount-0.5));
+			innerTemp2 = normalize(innerTemp2);
+			addPositions(innerTemp, innerTemp2);
+			camera_ray.origin = cam_ray_origin;
+			camera_ray.direction = innerTemp;*/
 
-				innerTemp.x = 0;
-				innerTemp.y = 0;
-				innerTemp.z = 0;
+			innerTemp.x = 0;
+			innerTemp.y = 0;
+			innerTemp.z = 0;
 
-				innerTemp2.x = 0;
-				innerTemp2.y = 0;
-				innerTemp2.z = 0;
+			innerTemp2.x = 0;
+			innerTemp2.y = 0;
+			innerTemp2.z = 0;
 
-				innerTemp3.x = 0;
-				innerTemp3.y = 0;
-				innerTemp3.z = 0;
+			innerTemp3.x = 0;
+			innerTemp3.y = 0;
+			innerTemp3.z = 0;
 
-				xamount = (i+0.5)/screenWidth;
-				yamount = ((screenWidth-j)+0.5)/screenWidth;
-				cam_ray_origin = camera.campos;
-				innerTemp3 = camright;
-				innerTemp3 = multPositions(innerTemp3,(xamount-0.5));
-				innerTemp = camdir;
-				innerTemp = addPositions(innerTemp, innerTemp3);
-				innerTemp2 = camdown;
-				innerTemp3 = multPositions(innerTemp2,(yamount-0.5));
-				innerTemp2 = normalize(innerTemp2);
-				innerTemp = addPositions(innerTemp, innerTemp2);
-				camera_ray.origin = cam_ray_origin;
-				//camera_ray.direction = innerTemp;
+			xamount = (i+0.5)/screenWidth;
+			yamount = ((screenWidth-j)+0.5)/screenWidth;
+			cam_ray_origin = camera.campos;
+			innerTemp3 = camright;
+			innerTemp3 = multPositions(innerTemp3,(xamount-0.5));
+			innerTemp = camdir;
+			innerTemp = addPositions(innerTemp, innerTemp3);
+			innerTemp2 = camdown;
+			innerTemp3 = multPositions(innerTemp2,(yamount-0.5));
+			innerTemp2 = normalize(innerTemp2);
+			innerTemp = addPositions(innerTemp, innerTemp2);
+			camera_ray.origin = cam_ray_origin;
+			//camera_ray.direction = innerTemp;
 
-				direction.x = p.x - camera_ray.origin.x;
-				direction.y = p.y - camera_ray.origin.y;
-				direction.z = p.z - camera_ray.origin.z;
+			direction.x = p.x - camera_ray.origin.x;
+			direction.y = p.y - camera_ray.origin.y;
+			direction.z = p.z - camera_ray.origin.z;
 
-				direction = normalize(direction);		
+			direction = normalize(direction);		
 
-				camera_ray.direction = direction;
+			camera_ray.direction = direction;
 
 
-				//loop through check each pixel for intersection
-				/*printf("%fcamera origin x: ",camera_ray.origin.x);
-				printf("\n");
-				printf("%fcamera origin y: ",camera_ray.origin.y);
-				printf("\n");
-				printf("%fcamera origin z: ",camera_ray.origin.z);
-				printf("\n");
+			//loop through check each pixel for intersection
+			/*printf("%fcamera origin x: ",camera_ray.origin.x);
+			printf("\n");
+			printf("%fcamera origin y: ",camera_ray.origin.y);
+			printf("\n");
+			printf("%fcamera origin z: ",camera_ray.origin.z);
+			printf("\n");
 
-				printf("%fcamera direction x: ",camera_ray.direction.x);
-				printf("\n");
-				printf("%fcamera direction y: ",camera_ray.direction.y);
-				printf("\n");
-				printf("%fcamera direction z: ",camera_ray.direction.z);
-				printf("\n");*/
+			printf("%fcamera direction x: ",camera_ray.direction.x);
+			printf("\n");
+			printf("%fcamera direction y: ",camera_ray.direction.y);
+			printf("\n");
+			printf("%fcamera direction z: ",camera_ray.direction.z);
+			printf("\n");*/
 
-				//testingVar = testFindSphere(camera_ray,sphere);
-				//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
-				//intersectionT = testFindSphere(camera_ray,global.sph);
-				//intersectionT = testFindSphere(camera_ray,testSphere);
+			//testingVar = testFindSphere(camera_ray,sphere);
+			//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
+			//intersectionT = testFindSphere(camera_ray,global.sph);
+			//intersectionT = testFindSphere(camera_ray,testSphere);
 
+			
+			planeIntersection = findIntersection(camera_ray, plane);
+
+			if (planeIntersection>0){
+				Im[i+j*screenWidth].r = 0;
+				Im[i+j*screenWidth].b = 0;
+				Im[i+j*screenWidth].g = 255;
+			}
+			testSphere = global.sph;
+			while(testSphere){
 				intersectionT = testFindSphere(camera_ray,testSphere);
-				planeIntersection = findIntersection(camera_ray, plane);
-			
-				//intersectionT = findPlaneIntersection(camera_ray,global.pla);			
-				if (planeIntersection>0){
-					Im[i+j*screenWidth].r = 0;
-					Im[i+j*screenWidth].b = 0;
-					Im[i+j*screenWidth].g = 255;
-				}
 				if (intersectionT>0){
 					//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
 					//printf("Sphere Intersection=%f\n", intersectionT);
@@ -935,11 +934,9 @@ void rayTrace(pixel* Im){
 					Im[i+j*screenWidth].g = g;
 					Im[i+j*screenWidth].b = b;
 				}
-
-				//printf("\n");
+				testSphere = testSphere->next;
 			}
 		}
-		testSphere = testSphere->next;
 	}
 	//glFlush();
 }
