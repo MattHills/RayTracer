@@ -555,7 +555,7 @@ float calculateDiffuse(float colour, Position lightToHitPoint, Position hitPoint
 		return 0;
 	}
 	*/
-	return colour * (lightSourceColour * Is * Rd * a) / (100);
+	return colour * (lightSourceColour * Is * Rd * a);
 }
 
 float calculateSpecular(float colour, Position eyeRay, Position reflectionRay, float lightSourceColour, float Is, float Rs, float f){
