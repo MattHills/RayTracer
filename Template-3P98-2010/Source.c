@@ -415,28 +415,22 @@ Position multPositions(Position v, double scalar){
 //Plane intersection
 
 
-/*double findIntersection(Ray ray,Plane p){
-	Position ray_direction = ray.direction;
-
-	double a = dotProduct(ray_direction,p.);
-
-	if (a == 0){
-	//ray is parrallel to plane
+double findIntersection(Ray ray,Plane* p){
+	double a = dotProduct(ray.direction,p->normal);
+	if (a == 0){//ray is parrallel to plane	
 		return -1;
 	}else{
-		Position temp;
-		Position temp2;
-		Position temp3;
 		double b;
+		Vector temp;
+		Vector multTemp;
 		temp = ray.origin;
-		temp2 = normalize(p);
-		temp3 = multPositions(temp2,p.distance);
-		temp2 = negative(temp3);
-		addPositions(temp, temp2);
-		b = dotProduct(p.normal,temp);
+		multTemp = multVectors(p->normal,p->distance);
+		multTemp = negative(multTemp);
+		temp = addVectors(p->normal, temp);
+		b = dotProduct(p->normal, temp);
 		return -1*b/a;
 	}
-}*/
+}
 
 double findSphereIntersection(Ray ray, Sphere* sphere){
 	/*findSphere intersection, finds the intersection between
@@ -728,22 +722,26 @@ void rayTrace(pixel* Im){
 
 	plane = (Plane*)malloc(sizeof (struct Plane));
 	
-	plane->normal.x = Y.x;
+	/*plane->normal.x = Y.x;
 	plane->normal.y = Y.y;
-	plane->normal.z = Y.z;
+	plane->normal.z = Y.z;*/
+
+	plane->normal.x = X.x;
+	plane->normal.y = X.y;
+	plane->normal.z = X.z;
 
 	plane->distance = -1;
 
-	plane->col = planeColor;
+	plane->col = green;
 
 	//debugg
 	
-	printf("\n");
+	/*printf("\n");
 	printf("plane stuff normal x %f",plane->normal.x);
 	printf("\n");
 	printf("plane stuff normal y %f",plane->normal.y);
 	printf("\n");
-	printf("plane stuff normal z %f",plane->normal.z);
+	printf("plane stuff normal z %f",plane->normal.z);*/
 	
 
 	//DEBUG STUFF
@@ -771,6 +769,7 @@ void rayTrace(pixel* Im){
 		for (i = 0;i<screenWidth;i++){
 			for (j = 0;j<screenWidth;j++){		
 				double intersectionT;
+				double planeIntersection;
 				float r,g,b;
 				float r2,g2,b2;
 						
@@ -852,9 +851,17 @@ void rayTrace(pixel* Im){
 				//testingVar = testFindSphere(camera_ray,sphere);
 				//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
 				//intersectionT = testFindSphere(camera_ray,global.sph);
+				//intersectionT = testFindSphere(camera_ray,testSphere);
+
 				intersectionT = testFindSphere(camera_ray,testSphere);
+				planeIntersection = findIntersection(camera_ray, plane);
 			
 				//intersectionT = findPlaneIntersection(camera_ray,global.pla);			
+				if (planeIntersection>0){
+					Im[i+j*screenWidth].r = 0;
+					Im[i+j*screenWidth].b = 0;
+					Im[i+j*screenWidth].g = 255;
+				}
 				if (intersectionT>0){
 					//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
 					//printf("Sphere Intersection=%f\n", intersectionT);
@@ -928,6 +935,7 @@ void rayTrace(pixel* Im){
 					Im[i+j*screenWidth].g = g;
 					Im[i+j*screenWidth].b = b;
 				}
+
 				//printf("\n");
 			}
 		}
