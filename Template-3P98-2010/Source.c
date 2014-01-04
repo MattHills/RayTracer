@@ -76,6 +76,7 @@ typedef struct Plane {
 	Position normal;
 	double distance;
 	Colour col;
+	MaterialEffects eff;
 	struct Plane *next;
 } Plane;
 
@@ -128,12 +129,8 @@ typedef struct Triangle {
 	Position C;
 	Position normal;
 	double distance;
-	Colour color;
-	/*Position pos;
-	Size size;
-	Angle ang;
-	Colour col;	
-	MaterialEffects eff;*/
+	Colour col;
+	MaterialEffects eff;
 	struct Triangle *next;
 } Triangle;
 
@@ -256,6 +253,8 @@ void readFile(){
 	FILE *file;
 	float i;
 	Sphere *s;
+	Plane *p;
+	Triangle *t;
 	LightSource *l;
 
 	//file = fopen("C:\3P98\3P98 Final Project\Ray Tracer\RayTracer\raydetails.txt","r");
@@ -308,6 +307,94 @@ void readFile(){
 				else{
 					s->next = global.sph;
 					global.sph = s;
+				}
+			}
+			else if(i == 1){
+				p = (Plane*)malloc(sizeof (struct Plane));
+				p->id = global.idCount;
+				global.idCount++;
+				fscanf(file, "%f", &i);
+				p->normal.x = i;
+				fscanf(file, "%f", &i);
+				p->normal.y = i;
+				fscanf(file, "%f", &i);
+				p->normal.z = i;
+				fscanf(file, "%f", &i);
+				p->col.r = i;
+				fscanf(file, "%f", &i);
+				p->col.g = i;
+				fscanf(file, "%f", &i);
+				p->col.b = i;
+				fscanf(file, "%f", &i);
+				p->eff.trans = i;
+				fscanf(file, "%f", &i);
+				p->eff.Ra = i;
+				fscanf(file, "%f", &i);
+				p->eff.Rd = i;
+				fscanf(file, "%f", &i);
+				p->eff.Rs = i;
+				fscanf(file, "%f", &i);
+				p->eff.f = i;
+				p->next = (Plane*)malloc(sizeof (struct Plane));
+				p->next = 0;
+
+				if(!global.pla){
+					global.pla = (Plane*)malloc(sizeof (struct Plane));
+					global.pla = p;
+				}
+				else{
+					p->next = global.pla;
+					global.pla = p;
+				}
+			}
+			else if(i == 2){
+				t = (Triangle*)malloc(sizeof (struct Triangle));
+				t->id = global.idCount;
+				global.idCount++;
+				fscanf(file, "%f", &i);
+				t->A.x = i;
+				fscanf(file, "%f", &i);
+				t->A.y = i;
+				fscanf(file, "%f", &i);
+				t->A.z = i;
+				fscanf(file, "%f", &i);
+				t->B.x = i;
+				fscanf(file, "%f", &i);
+				t->B.y = i;
+				fscanf(file, "%f", &i);
+				t->B.z = i;
+				fscanf(file, "%f", &i);
+				t->C.x = i;
+				fscanf(file, "%f", &i);
+				t->C.y = i;
+				fscanf(file, "%f", &i);
+				t->C.z = i;
+				fscanf(file, "%f", &i);
+				t->col.r = i;
+				fscanf(file, "%f", &i);
+				t->col.g = i;
+				fscanf(file, "%f", &i);
+				t->col.b = i;
+				fscanf(file, "%f", &i);
+				t->eff.trans = i;
+				fscanf(file, "%f", &i);
+				t->eff.Ra = i;
+				fscanf(file, "%f", &i);
+				t->eff.Rd = i;
+				fscanf(file, "%f", &i);
+				t->eff.Rs = i;
+				fscanf(file, "%f", &i);
+				t->eff.f = i;
+				t->next = (Triangle*)malloc(sizeof (struct Triangle));
+				t->next = 0;
+
+				if(!global.tri){
+					global.tri = (Triangle*)malloc(sizeof (struct Triangle));
+					global.tri = t;
+				}
+				else{
+					t->next = global.tri;
+					global.tri = t;
 				}
 			}
 			else if(i == 8){
@@ -457,10 +544,258 @@ double findPlaneIntersection(Ray ray, Plane* plane){
 	}	
 }
 
+//Triangles
+
+Position getTriangleNormal(Position A, Position B, Position C){
+	Position CA;
+	Position BA;
+	Position normal;
+	CA.x = C.x - A.x;
+	CA.y = C.y - A.y;
+	CA.z = C.z - A.z;
+	BA.x = B.x - A.x;
+	BA.y = B.y - A.y;
+	BA.z = B.z - A.z;
+	normal = crossProd(CA, BA);
+	normal = normalize(normal);
+	return normal;
+}//return normal of triangle
+
+double getTriangleDistance(Triangle* t){
+	double distance;
+	distance = dotProduct(t->normal, t->A);
+	return distance;
+}
+
+Position getNormalAt(Triangle t){
+	return t.normal;
+}
+
+//Last Triangle attempt
+
+double triangleIntersect(Ray ray, Triangle* t){
+	Position tempA;
+	Position tempB;
+	Position N;
+	Position P;
+	Position C;
+	Position edge0;
+	Position VP0;
+	Position edge1;
+	Position VP1;
+	Position edge2;
+	Position VP2;
+
+	Position CA;
+	Position CP;
+	double NdotRayDirection;
+	double d;
+	double tempT;
+
+	t->A = normalize(t->A);
+	t->B = normalize(t->B);
+	t->C = normalize(t->C);
+	t->normal = getTriangleNormal(t->A,t->B,t->C);
+
+	tempA.x = t->B.x - t->A.x;
+	tempA.y = t->B.y - t->A.y;
+	tempA.z = t->B.z - t->A.z;
+
+	tempB.x = t->C.x - t->A.x;
+	tempB.y = t->C.y - t->A.y;
+	tempB.z = t->C.z - t->A.z;
+
+	N = crossProd(tempA, tempB);
+	NdotRayDirection = dotProduct(N, ray.direction);
+	if (NdotRayDirection == 0){
+		return -1;
+	}
+	d = dotProduct(N, t->A);
+	tempT = -(((dotProduct(N, ray.origin)) + t->distance) / NdotRayDirection);
+	printf("Temp t %f",tempT);
+	printf("\n");
+	if (tempT < 0){
+		return -1;
+	}
+	//point P = rayOrig + t * rayDir;
+	P.x = ray.origin.x + tempT * ray.direction.x;
+	P.y = ray.origin.y + tempT * ray.direction.y;
+	P.z = ray.origin.z + tempT * ray.direction.z;
+	
+	edge0.x = t->B.x - t->A.x;
+	edge0.y = t->B.y - t->A.y;
+	edge0.z = t->B.z - t->A.z;
+
+	VP0.x = P.x - t->A.x;
+	VP0.y = P.y - t->A.y;
+	VP0.z = P.z - t->A.z;
+
+	C = crossProd(edge0, VP0);
+	printf("dotprod n and c edge 1 %f",dotProduct(N, C));
+	printf("\n");
+	if (dotProduct(N, C) < 0){
+		return -1;
+	}
+
+	edge1.x = t->C.x - t->B.x;
+	edge1.y = t->C.y - t->B.y;
+	edge1.z = t->C.z - t->B.z;
+
+	VP1.x = P.x - t->B.x;
+	VP1.y = P.y - t->B.y;
+	VP1.z = P.z - t->B.z;
+
+	C = crossProd(edge0, VP1);
+	printf("dotprod n and c edge 2 %f",dotProduct(N, C));
+	printf("\n");
+	if (dotProduct(N,C) < 0){
+		return -1;
+	}
+
+	edge2.x = t->A.x - t->C.x;
+	edge2.y = t->A.y - t->C.y;
+	edge2.z = t->A.z - t->C.z;
+
+	VP2.x = P.x - t->C.x;
+	VP2.y = P.y - t->C.y;
+	VP2.z = P.z - t->C.z;
+
+	CA = crossProd(C,t->A);
+	CP = crossProd(C,P);
+
+	C = crossProd(CA,CP);
+	printf("dotprod n and c edge 3 %f",dotProduct(N, C));
+	printf("\n");
+	if (dotProduct(N,C) < 0){
+		return -1;
+	}
+
+	else {
+		return 1;
+	}
+}
+
 //Triangle stuff
+double findTriangleIntersection(Ray ray,Triangle* t){	
+	double a;
+	t->A = normalize(t->A);
+	t->B = normalize(t->B);
+	t->C = normalize(t->C);
+	t->normal = getTriangleNormal(t->A,t->B,t->C);
+	/*printf("t normal sadf x %f",t->normal.x);
+	printf("\n");
+	printf("t normal sadf y %f",t->normal.y);
+	printf("\n");
+	printf("t normal sadf z %f",t->normal.z);
+	printf("\n");*/
+	t->distance = getTriangleDistance(t);
 
-double findTriangleIntersection(Ray ray,Triangle* t){
+	a = dotProduct(ray.direction,t->normal);
+	if (a == 0){//ray is parrallel to plane	
+		return -1;
+	}else{
+		double b;
+		double distanceToPlane;
+		double Qx, Qy, Qz;
+		double test1, test2, test3;
+		Position Q;
+		Position temp;
+		Position multTemp;
+		Position CA;
+		Position QA;
+		Position BC;
+		Position QC;
+		Position AB;
+		Position QB;
+		temp = ray.origin;
+		multTemp = multPositions(t->normal,t->distance);
+		multTemp = negative(multTemp);
+		temp = addPositions(t->normal, temp);
+		b = dotProduct(t->normal, temp);
 
+		distanceToPlane = -1*b/a;
+
+		Qx = (multPositions(ray.direction, distanceToPlane)).x + ray.origin.x;
+		Qy = (multPositions(ray.direction, distanceToPlane)).y + ray.origin.y;
+		Qz = (multPositions(ray.direction, distanceToPlane)).z + ray.origin.z;
+
+		Q.x = Qx;
+		Q.y = Qy;
+		Q.z = Qz;
+
+		Q = normalize(Q);
+
+		/*printf("\n");
+		printf("Q.x %f", Q.x);
+		printf("\n");
+		printf("Q.y %f", Q.y);
+		printf("\n");
+		printf("Q.z %f", Q.z);
+		printf("\n");*/
+
+		// [CAxQA]*n>=0
+		CA.x = t->C.x - t->A.x;
+		CA.y = t->C.y - t->A.y;
+		CA.z = t->C.z - t->A.z;
+
+		QA.x = Q.x - t->A.x;
+		QA.y = Q.y - t->A.y;
+		QA.z = Q.z - t->A.z;
+
+		CA = normalize(CA); //normalize
+		QA = normalize(QA); //normalize
+
+		test1 = dotProduct(crossProd(CA, QA),t->normal);	
+
+		// [BCxQC]*n>=0
+		BC.x = t->B.x - t->C.x;
+		BC.y = t->B.y - t->C.y;
+		BC.z = t->B.z - t->C.z;
+
+		QC.x = Q.x - t->C.x;
+		QC.y = Q.y - t->C.y;
+		QC.z = Q.z - t->C.z;
+
+		BC = normalize(BC); //normalize
+		QC = normalize(QC); //normalize
+
+		test2 = dotProduct(crossProd(BC, QC),t->normal);	
+
+		// [ABxQB]*n>=0
+		AB.x = t->A.x - t->B.x;
+		AB.y = t->A.y - t->B.y;
+		AB.z = t->A.z - t->B.z;
+
+		QB.x = Q.x - t->B.x;
+		QB.y = Q.y - t->B.y;
+		QB.z = Q.z - t->B.z;
+
+		AB = normalize(AB); //normalize
+		QB = normalize(QB); //normalize
+
+		test3 = dotProduct(crossProd(AB, QB),t->normal);
+
+		if ((test2 >= 0) && (test1 >= 0)){
+		printf("\n");
+		printf("test1 %f", test1);
+		printf("\n");
+		printf("test2 %f", test2);
+		printf("\n");
+		printf("test3 %f", test3);
+		printf("\n");
+		}
+		//test if inside triangle
+		if ((test1 >= 0) && (test2 >= 0) && (test3 >= 0)){
+			//inside triangle
+			return -1*b/a;
+		} else {
+			return -1;//outside triangle
+		}		
+	}
+}
+
+/*double findTriangleIntersection(Ray ray,Triangle* t){
+	
 
 	double a = dotProduct(ray.direction,t->normal);
 	if (a == 0){//ray is parrallel to plane	
@@ -504,7 +839,8 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 		QA.y = Q.y - t->A.y;
 		QA.z = Q.z - t->A.z;
 
-		test1 = dotProduct(crossProd(CA, QA),t->normal);		
+		test1 = dotProduct(crossProd(CA, QA),t->normal);	
+
 		// [BCxQC]*n>=0
 		BC.x = t->B.x - t->C.x;
 		BC.y = t->B.y - t->C.y;
@@ -525,6 +861,15 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 		QB.z = Q.z - t->B.z;
 
 		test3 = dotProduct(crossProd(AB, QB),t->normal);
+
+		printf("\n");
+		printf("test1 %f", test1);
+		printf("\n");
+		printf("test2 %f", test2);
+		printf("\n");
+		printf("test3 %f", test3);
+		printf("\n");
+
 		//test if inside triangle
 		if ((test1 >= 0) && (test2 >= 0) && (test3 >= 0)){
 			//inside triangle
@@ -533,31 +878,8 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 			return -1;//outside triangle
 		}		
 	}
-}
+}*/
 
-Position getTriangleNormal(Position A, Position B, Position C, Colour c){
-	Position CA;
-	Position BA;
-	Position normal;
-	CA.x = C.x - A.x;
-	CA.y = C.y - A.y;
-	CA.z = C.z - A.z;
-	BA.x = B.x - A.x;
-	BA.y = B.y - A.y;
-	BA.z = B.z - A.z;
-	normal = crossProd(CA, BA);
-	normal = normalize(normal);
-	return normal;
-}//return normal of triangle
-
-double getTriangleDistance(Triangle t){
-	double distance;
-	distance = dotProduct(t.normal, t.A);
-}
-
-Position getNormalAt(Triangle t){
-	return t.normal;
-}
 
 float calculateAmbient(float colour, float lightSourceColour, float Ia, float Ra){
 	float ret;
@@ -681,6 +1003,7 @@ int findClosestIntersectionPoint(Ray cameraRay, int x, int y){
 	testTriangle = global.tri;
 
 	returnId = -1;
+	currentClosestZ = 10000000;
 
 	while(testSphere){
 		intersectionT = testFindSphere(cameraRay, testSphere);
@@ -728,6 +1051,7 @@ void rayTrace(pixel* Im){
 	//Ray declaration stuff
 	int i,j;
 	int x,y,z;
+	int closestId;
 	double aspectratio;
 	double xamount;
 	double yamount;
@@ -746,6 +1070,8 @@ void rayTrace(pixel* Im){
 	Position cam_ray_direction;
 	Ray camera_ray;
 	Sphere *testSphere;
+	Plane *testPlane;
+	Triangle *testTriangle;
 	LightSource *lightSource;
 
 	//temp Positions	
@@ -823,28 +1149,24 @@ void rayTrace(pixel* Im){
 
 	plane->distance = -1;
 
-	plane->col = green;
-
 	//Triangle stuff
 
-	triangle = (Triangle*)malloc(sizeof (struct Triangle));
+	//triangle->A = normalize(triangle->A);
+	//triangle->B = normalize(triangle->B);
+	//triangle->C = normalize(triangle->C);
 
-	triangle->A.x = 320;
-	triangle->A.y = 320;
-	triangle->A.z = 520;
+	//triangle->normal = getTriangleNormal(triangle->A,triangle->B,triangle->C);
 
-	triangle->B.x = 320;
-	triangle->B.y = 420;
-	triangle->B.z = 520;
+	//triangle->distance = getTriangleDistance(triangle);
 
-	triangle->C.x = 320;
-	triangle->C.y = 320;
-	triangle->C.z = 420;
+	/*printf("normal of triangle x %f",triangle->normal.x);
+	printf("\n");
+	printf("normal of triangle y %f",triangle->normal.y);
+	printf("\n");
+	printf("normal of triangle z %f",triangle->normal.z);
+	printf("\n");*/
 
-	triangle->color.r = 0;
-	triangle->color.b = 255;
-	triangle->color.g = 0;
-
+	//printf("distance of triangle %f",triangle->distance);
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
 			double intersectionT;
@@ -893,144 +1215,132 @@ void rayTrace(pixel* Im){
 			direction.z = p.z - camera_ray.origin.z;
 
 			direction = normalize(direction);		
-
-			camera_ray.direction = direction;
-
-
-			//loop through check each pixel for intersection
-			/*printf("%fcamera origin x: ",camera_ray.origin.x);
-			printf("\n");
-			printf("%fcamera origin y: ",camera_ray.origin.y);
-			printf("\n");
-			printf("%fcamera origin z: ",camera_ray.origin.z);
-			printf("\n");
-
-			printf("%fcamera direction x: ",camera_ray.direction.x);
-			printf("\n");
-			printf("%fcamera direction y: ",camera_ray.direction.y);
-			printf("\n");
-			printf("%fcamera direction z: ",camera_ray.direction.z);
-			printf("\n");*/
-
-			//testingVar = testFindSphere(camera_ray,sphere);
-			//printf("Sphere Intersection=%f\n", testFindSphere(camera_ray,sphere));
-			//intersectionT = testFindSphere(camera_ray,global.sph);
-			//intersectionT = testFindSphere(camera_ray,testSphere);
-
 			
-			planeIntersection = findIntersection(camera_ray, plane);
+			//triangleIntersection = triangleIntersect(camera_ray, triangle);
 
-			triangleIntersection = findTriangleIntersection(camera_ray, triangle);
-
-			if (triangleIntersection > 0){
+			/*if (triangleIntersection > 0){
 				Im[i+j*screenWidth].r = 0;
 				Im[i+j*screenWidth].b = 255;
 				Im[i+j*screenWidth].g = 0;
-			}
-			if (planeIntersection>0){				
-				Im[i+j*screenWidth].r = 0;
-				Im[i+j*screenWidth].b = 0;
-				Im[i+j*screenWidth].g = 255;
-			}
+			}*/
+
 			testSphere = global.sph;
+			testPlane = global.pla;
+			testTriangle = global.tri;
+
+			closestId = findClosestIntersectionPoint(camera_ray, i, j);
+
 			while(testSphere){
-				intersectionT = testFindSphere(camera_ray,testSphere);
-				if (intersectionT>0){
-					//If the above finds a suitable positive t value, then it is used to nd the sphere intersection point ri
-					//printf("Sphere Intersection=%f\n", intersectionT);
-					raySphereIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
-					raySphereIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
-					raySphereIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
-
-					/*
-					printf("\n");
-					printf("raySphereInterscetion.x %f",raySphereIntersection.x);
-					printf("\n");
-					printf("raySphereInterscetion.y %f",raySphereIntersection.y);
-					printf("\n");
-					printf("raySphereInterscetion.z %f",raySphereIntersection.z);
-					printf("\n");
-					*/
-
-					//glColor3f(testSphere->col.r, testSphere->col.g, testSphere->col.b);
-					//glColor3f(global.pla->col.r, global.pla->col.g, global.pla->col.b);
-					//glBegin(GL_POINTS);
-					//glVertex3f(raySphereIntersection.x,raySphereIntersection.y,raySphereIntersection.z);
-					//glEnd();
-					
-					if(global.lig){
-						r = 0;
-						g = 0;
-						b = 0;
-						r2 = 0;
-						g2 = 0;
-						b2 = 0;
-						lightSource = global.lig;
-						while(lightSource){
-							Position sphereNormal;
-							Position lightVector;
-							Position reflectionRay;
-
-							// Get Vector normal from light source to hitpoint
-							lightVector.x = lightSource->pos.x - raySphereIntersection.x;
-							lightVector.y = lightSource->pos.y - raySphereIntersection.y;
-							lightVector.z = lightSource->pos.z - raySphereIntersection.z;
-							lightVector = normalize(lightVector);
-
-							
-							// Ambient Light Calculation
-							r2 = calculateAmbient(testSphere->col.r, lightSource->col.r, lightSource->Ia, testSphere->eff.Ra);
-							g2 = calculateAmbient(testSphere->col.g, lightSource->col.g, lightSource->Ia, testSphere->eff.Ra);
-							b2 = calculateAmbient(testSphere->col.b, lightSource->col.b, lightSource->Ia, testSphere->eff.Ra);
-						
-							
-							// Diffuse Reflection Calculation
-							sphereNormal = getSphereNormal(testSphere->pos, raySphereIntersection);
-							r2 += calculateDiffuse(testSphere->col.r, lightVector, sphereNormal, lightSource->pos, lightSource->col.r, lightSource->Is, testSphere->eff.Rd);
-							g2 += calculateDiffuse(testSphere->col.g, lightVector, sphereNormal, lightSource->pos, lightSource->col.g, lightSource->Is, testSphere->eff.Rd);
-							b2 += calculateDiffuse(testSphere->col.b, lightVector, sphereNormal, lightSource->pos, lightSource->col.b, lightSource->Is, testSphere->eff.Rd);
-							
-							
-							// Specular Calculation
-							/*
-							reflectionRay = getReflectionRay(campos, raySphereIntersection, sphereNormal);
-							r2 += calculateSpecular(testSphere->col.r, lightVector, reflectionRay, lightSource->col.r, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
-							g2 += calculateSpecular(testSphere->col.g, lightVector, reflectionRay, lightSource->col.g, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
-							b2 += calculateSpecular(testSphere->col.b, lightVector, reflectionRay, lightSource->col.b, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
-							*/
-
-							r += r2;
-							g += g2;
-							b += b2;
-							lightSource = lightSource->next;
-						}						
-						/*
-						r *= testSphere->col.r;
-						g *= testSphere->col.g;
-						b *= testSphere->col.b;
-						*/
-					}
-					else{
-						r = testSphere->col.r;
-						g = testSphere->col.g;
-						b = testSphere->col.b;
-					}
-
-					calcColour.r = r;
-					calcColour.g = g;
-					calcColour.b = b;
-
-					calcColour = clipColour(calcColour);
-
-					Im[i+j*screenWidth].r = calcColour.r;					
-					Im[i+j*screenWidth].g = calcColour.g;
-					Im[i+j*screenWidth].b = calcColour.b;
+				if(testSphere->id == closestId){
+					break;
 				}
 				testSphere = testSphere->next;
 			}
+
+			while(testPlane){
+				if(testPlane->id == closestId){
+					break;
+				}
+				testPlane = testPlane->next;
+			}
+
+			while(testTriangle){
+				if(testTriangle->id == closestId){
+					break;
+				}
+				testTriangle = testTriangle->next;
+			}
+
+			if(testSphere){
+				intersectionT = testFindSphere(camera_ray, testSphere);
+				raySphereIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
+				raySphereIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
+				raySphereIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
+					
+				if(global.lig){
+					r = 0;
+					g = 0;
+					b = 0;
+					r2 = 0;
+					g2 = 0;
+					b2 = 0;
+					lightSource = global.lig;
+					while(lightSource){
+						Position sphereNormal;
+						Position lightVector;
+						Position reflectionRay;
+
+						// Get Vector normal from light source to hitpoint
+						lightVector.x = lightSource->pos.x - raySphereIntersection.x;
+						lightVector.y = lightSource->pos.y - raySphereIntersection.y;
+						lightVector.z = lightSource->pos.z - raySphereIntersection.z;
+						lightVector = normalize(lightVector);
+
+							
+						// Ambient Light Calculation
+						r2 = calculateAmbient(testSphere->col.r, lightSource->col.r, lightSource->Ia, testSphere->eff.Ra);
+						g2 = calculateAmbient(testSphere->col.g, lightSource->col.g, lightSource->Ia, testSphere->eff.Ra);
+						b2 = calculateAmbient(testSphere->col.b, lightSource->col.b, lightSource->Ia, testSphere->eff.Ra);
+						
+							
+						// Diffuse Reflection Calculation
+						sphereNormal = getSphereNormal(testSphere->pos, raySphereIntersection);
+						r2 += calculateDiffuse(testSphere->col.r, lightVector, sphereNormal, lightSource->pos, lightSource->col.r, lightSource->Is, testSphere->eff.Rd);
+						g2 += calculateDiffuse(testSphere->col.g, lightVector, sphereNormal, lightSource->pos, lightSource->col.g, lightSource->Is, testSphere->eff.Rd);
+						b2 += calculateDiffuse(testSphere->col.b, lightVector, sphereNormal, lightSource->pos, lightSource->col.b, lightSource->Is, testSphere->eff.Rd);
+							
+							
+						// Specular Calculation
+						/*
+						reflectionRay = getReflectionRay(campos, raySphereIntersection, sphereNormal);
+						r2 += calculateSpecular(testSphere->col.r, lightVector, reflectionRay, lightSource->col.r, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+						g2 += calculateSpecular(testSphere->col.g, lightVector, reflectionRay, lightSource->col.g, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+						b2 += calculateSpecular(testSphere->col.b, lightVector, reflectionRay, lightSource->col.b, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
+						*/
+
+						r += r2;
+						g += g2;
+						b += b2;
+						lightSource = lightSource->next;
+					}						
+					/*
+					r *= testSphere->col.r;
+					g *= testSphere->col.g;
+					b *= testSphere->col.b;
+					*/
+				}
+				else{
+					r = testSphere->col.r;
+					g = testSphere->col.g;
+					b = testSphere->col.b;
+				}
+
+				calcColour.r = r;
+				calcColour.g = g;
+				calcColour.b = b;
+
+				calcColour = clipColour(calcColour);
+			}
+			else if(testPlane){				
+				calcColour.r = testPlane->col.r;
+				calcColour.g = testPlane->col.g;
+				calcColour.b = testPlane->col.b;
+			}
+			else if(testTriangle){
+				calcColour.r = testTriangle->col.r;
+				calcColour.g = testTriangle->col.g;
+				calcColour.b = testTriangle->col.b;
+			}
+			else{
+				calcColour.r = 0;
+				calcColour.g = 0;
+				calcColour.b = 0;
+			}
+			Im[i+j*screenWidth].r = calcColour.r;					
+			Im[i+j*screenWidth].g = calcColour.g;
+			Im[i+j*screenWidth].b = calcColour.b;
 		}
 	}
-	//glFlush();
 }
 
 
@@ -1039,51 +1349,13 @@ main(int argc, char **argv)
 	// Initialize game settings
 	screenWidth = 800;	
 
-	global.idCount = 10000000;
+	global.idCount = 0;
 
 	global.data = (pixel *)malloc((screenWidth)*(screenWidth)*sizeof(pixel *));
 
 	global.tempData = (pixel *)malloc((screenWidth)*(screenWidth)*sizeof(pixel *));
 	
 	rayTrace(global.data);
-	write_img("test.jpg", global.data, screenWidth, screenWidth);
-	/*
-	//printf("Q:quit\nU:toggle spray\nZ:spin on z\nX:spin on x\nY:spin on y\nC:toggle culling\nV:toggle colours\nD:toggle size\nI:view points\nO:view wire frame\nP:view polygons\nA:toggle auto fire particles\nS:set speed\nF:manual fire mode\nB:toggle rotate\nN:toggle friction\nR:reset\n");
-    glutInit(&argc, argv);
-    glutInitWindowSize(screenWidth, screenWidth);
-	//glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
-	glutInitDisplayMode(GLUT_RGB);
-
-    glutCreateWindow("Ray Tracer");
-
-    glutKeyboardFunc(keyboard);
-    glutDisplayFunc(rayTrace);
-	//glutIdleFunc(redraw);
-    glutReshapeFunc(reshape);
-
-    glMatrixMode(GL_PROJECTION);
-	//glEnable(GL_DEPTH_TEST);
-	//glDepthFunc(GL_LESS);
-	//glLoadIdentity();
-
-	glOrtho(0, screenWidth, 0, screenWidth, -100, 1000);//old working orth
-
-	//glOrtho(0, screenWidth, 0, screenWidth, -1000, 100);
-
-	//glOrtho(-10, 10, -10, 10, -1.0, 1.0);
-
-	//gluOrtho2D(0,500,0,500);
-
-	//glOrtho(-5,screenWidth,-5,screenWidth,0,10);
-	//gluPerspective(20, screenWidth/screenWidth, 0.1, 1500);
-	//gluLookAt(900, 250, 800, 0, 0, 0, 0, 1, 0);
-
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-
-	//glPushMatrix();
-	//rayTrace();
-    glutMainLoop();
-	*/
-	
+	write_img("test.jpg", global.data, screenWidth, screenWidth);	
 
 }

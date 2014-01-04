@@ -1,16 +1,44 @@
 ray details sheet
 shapes:
-type:
+type: 0 | Sphere
 x pos:
 y pos:
 z pos:
-width:
-height:
-depth:
 radius:
-angle x:
-angle y:
-angle z:
+colour r:
+colour g:
+colour b:
+transparency:
+Ra (ambient surface coefficient): 0 <= Ra <= 1
+Rd (material diffuse coefficient): 0 <= Rd <= 1
+Rs (material specular reflection coefficient): 0 <= Rs <= 1
+f is a specular highlight coefficient: (f>=1) 
+use -55 after your shape definition for your assistance
+
+type: 1 | Plane
+x pos:
+y pos:
+z pos:
+colour r:
+colour g:
+colour b:
+transparency:
+Ra (ambient surface coefficient): 0 <= Ra <= 1
+Rd (material diffuse coefficient): 0 <= Rd <= 1
+Rs (material specular reflection coefficient): 0 <= Rs <= 1
+f is a specular highlight coefficient: (f>=1) 
+use -55 after your shape definition for your assistance
+
+type: 2 | Triangle
+x pos:
+y pos:
+z pos:
+x pos;
+y pos;
+z pos;
+x pos;
+y pos;
+z pos;
 colour r:
 colour g:
 colour b:
@@ -35,4 +63,5 @@ Is light intensity:
 types:
 0: sphere
 1: plane
+2: triangle
 8: light source
