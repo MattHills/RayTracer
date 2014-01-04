@@ -14,45 +14,45 @@ typedef struct {
 } pixel;
 
 typedef struct MaterialEffects{
-	float trans;
-	float Ra;
-	float Rd;
-	float Rs;
-	float f;
+	double trans;
+	double Ra;
+	double Rd;
+	double Rs;
+	double f;
 } MaterialEffects;
 
 // To angle on the shapes
 typedef struct {
-	float x;
-	float y;
-	float z;
+	double x;
+	double y;
+	double z;
 } Angle;
 
 // Between 0-255
 typedef struct Colour{
-	float r;
-	float g;
-	float b;
+	double r;
+	double g;
+	double b;
 } Colour;
 
 // Size of shape
 typedef struct {
-	float height;
-	float width;
-	float depth;
+	double height;
+	double width;
+	double depth;
 } Size;
 
 // Position of shape
 typedef struct {
-	float x;
-	float y;
-	float z;
+	double x;
+	double y;
+	double z;
 } Position;
 
 // Radius for circular shapes
 typedef struct {
-	float internalRadius;
-	float totalRadius;
+	double internalRadius;
+	double totalRadius;
 } Radius;
 
 // Torus shape
@@ -74,7 +74,6 @@ typedef struct Plane {
 	Angle ang;	
 	Transparency trans;*/
 	Position normal;
-	double distance;
 	Colour col;
 	MaterialEffects eff;
 	struct Plane *next;
@@ -138,8 +137,8 @@ typedef struct LightSource{
 	int id;
 	Position pos;
 	Colour col;
-	float Ia;
-	float Is;
+	double Ia;
+	double Is;
 	struct LightSource *next;
 } LightSource;
 
@@ -179,9 +178,9 @@ typedef struct Camera{
 } Camera;
 
 /*typedef struct Color {
-	float r;
-	float g;
-	float b;
+	double r;
+	double g;
+	double b;
 } Color;*/
 
 typedef struct Light{
@@ -251,7 +250,7 @@ void keyboard(unsigned char key, int x, int y) {
 
 void readFile(){
 	FILE *file;
-	float i;
+	double i;
 	Sphere *s;
 	Plane *p;
 	Triangle *t;
@@ -264,38 +263,38 @@ void readFile(){
 		printf("Error when opening file");
 	}
 	else{
-		fscanf(file, "%f", &i);
+		fscanf(file, "%lf", &i);
 		while(!feof(file)){
 			if(i == 0){
 				s = (Sphere*)malloc(sizeof (struct Sphere));
 				s->id = global.idCount;
 				global.idCount++;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->pos.x = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->pos.y = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->pos.z = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->rad.totalRadius = i;				
 				s->ang.x = 0;
 				s->ang.y = 0;
 				s->ang.z = 0;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->col.r = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->col.b = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->col.g = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->eff.trans = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->eff.Ra = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->eff.Rd = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->eff.Rs = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				s->eff.f = i;
 				s->next = (Sphere*)malloc(sizeof (struct Sphere));
 				s->next = 0;
@@ -313,27 +312,27 @@ void readFile(){
 				p = (Plane*)malloc(sizeof (struct Plane));
 				p->id = global.idCount;
 				global.idCount++;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->normal.x = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->normal.y = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->normal.z = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->col.r = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->col.g = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->col.b = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->eff.trans = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->eff.Ra = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->eff.Rd = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->eff.Rs = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				p->eff.f = i;
 				p->next = (Plane*)malloc(sizeof (struct Plane));
 				p->next = 0;
@@ -351,39 +350,39 @@ void readFile(){
 				t = (Triangle*)malloc(sizeof (struct Triangle));
 				t->id = global.idCount;
 				global.idCount++;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->A.x = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->A.y = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->A.z = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->B.x = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->B.y = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->B.z = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->C.x = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->C.y = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->C.z = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->col.r = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->col.g = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->col.b = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->eff.trans = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->eff.Ra = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->eff.Rd = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->eff.Rs = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				t->eff.f = i;
 				t->next = (Triangle*)malloc(sizeof (struct Triangle));
 				t->next = 0;
@@ -401,21 +400,21 @@ void readFile(){
 				l = (LightSource*)malloc(sizeof (struct LightSource));
 				l->id = global.idCount;
 				global.idCount++;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				l->pos.x = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				l->pos.y = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				l->pos.z = i;			
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				l->col.r = i;	
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				l->col.g = i;	
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				l->col.b = i;	
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				l->Ia = i;
-				fscanf(file, "%f", &i);
+				fscanf(file, "%lf", &i);
 				l->Is = i;
 				l->next = (LightSource*)malloc(sizeof (struct LightSource));
 				l->next = 0;
@@ -429,7 +428,7 @@ void readFile(){
 					global.lig = l;
 				}
 			}
-			fscanf(file, "%f", &i);
+			fscanf(file, "%lf", &i);
 		}
 		fclose(file);
 	}	
@@ -457,7 +456,7 @@ Position negative (Position v){
 	return temp;
 }//negative of a Position
 
-float dotProduct(Position v, Position c){
+double dotProduct(Position v, Position c){
 	return (v.x*c.x + v.y*c.y + v.z*c.z);
 }//dotProdcut of two Positions v and c
 
@@ -531,7 +530,7 @@ double testFindSphere (Ray ray, Sphere* sphere){
 
 double findPlaneIntersection(Ray ray, Plane* plane){	
 	//Calculate Plane normal Position dot Ray origin
-	float a = dotProduct(plane->normal,ray.origin);
+	double a = dotProduct(plane->normal,ray.origin);
 	//if a==0 ray is parrallel
 	if (a == 0){
 		return -1;
@@ -612,7 +611,7 @@ double triangleIntersect(Ray ray, Triangle* t){
 	}
 	d = dotProduct(N, t->A);
 	tempT = -(((dotProduct(N, ray.origin)) + t->distance) / NdotRayDirection);
-	printf("Temp t %f",tempT);
+	printf("Temp t %lf",tempT);
 	printf("\n");
 	if (tempT < 0){
 		return -1;
@@ -631,7 +630,7 @@ double triangleIntersect(Ray ray, Triangle* t){
 	VP0.z = P.z - t->A.z;
 
 	C = crossProd(edge0, VP0);
-	printf("dotprod n and c edge 1 %f",dotProduct(N, C));
+	printf("dotprod n and c edge 1 %lf",dotProduct(N, C));
 	printf("\n");
 	if (dotProduct(N, C) < 0){
 		return -1;
@@ -646,7 +645,7 @@ double triangleIntersect(Ray ray, Triangle* t){
 	VP1.z = P.z - t->B.z;
 
 	C = crossProd(edge0, VP1);
-	printf("dotprod n and c edge 2 %f",dotProduct(N, C));
+	printf("dotprod n and c edge 2 %lf",dotProduct(N, C));
 	printf("\n");
 	if (dotProduct(N,C) < 0){
 		return -1;
@@ -664,7 +663,7 @@ double triangleIntersect(Ray ray, Triangle* t){
 	CP = crossProd(C,P);
 
 	C = crossProd(CA,CP);
-	printf("dotprod n and c edge 3 %f",dotProduct(N, C));
+	printf("dotprod n and c edge 3 %lf",dotProduct(N, C));
 	printf("\n");
 	if (dotProduct(N,C) < 0){
 		return -1;
@@ -682,11 +681,11 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 	t->B = normalize(t->B);
 	t->C = normalize(t->C);
 	t->normal = getTriangleNormal(t->A,t->B,t->C);
-	/*printf("t normal sadf x %f",t->normal.x);
+	/*printf("t normal sadf x %lf",t->normal.x);
 	printf("\n");
-	printf("t normal sadf y %f",t->normal.y);
+	printf("t normal sadf y %lf",t->normal.y);
 	printf("\n");
-	printf("t normal sadf z %f",t->normal.z);
+	printf("t normal sadf z %lf",t->normal.z);
 	printf("\n");*/
 	t->distance = getTriangleDistance(t);
 
@@ -726,11 +725,11 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 		Q = normalize(Q);
 
 		/*printf("\n");
-		printf("Q.x %f", Q.x);
+		printf("Q.x %lf", Q.x);
 		printf("\n");
-		printf("Q.y %f", Q.y);
+		printf("Q.y %lf", Q.y);
 		printf("\n");
-		printf("Q.z %f", Q.z);
+		printf("Q.z %lf", Q.z);
 		printf("\n");*/
 
 		// [CAxQA]*n>=0
@@ -777,11 +776,11 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 
 		if ((test2 >= 0) && (test1 >= 0)){
 		printf("\n");
-		printf("test1 %f", test1);
+		printf("test1 %lf", test1);
 		printf("\n");
-		printf("test2 %f", test2);
+		printf("test2 %lf", test2);
 		printf("\n");
-		printf("test3 %f", test3);
+		printf("test3 %lf", test3);
 		printf("\n");
 		}
 		//test if inside triangle
@@ -863,11 +862,11 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 		test3 = dotProduct(crossProd(AB, QB),t->normal);
 
 		printf("\n");
-		printf("test1 %f", test1);
+		printf("test1 %lf", test1);
 		printf("\n");
-		printf("test2 %f", test2);
+		printf("test2 %lf", test2);
 		printf("\n");
-		printf("test3 %f", test3);
+		printf("test3 %lf", test3);
 		printf("\n");
 
 		//test if inside triangle
@@ -881,16 +880,16 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 }*/
 
 
-float calculateAmbient(float colour, float lightSourceColour, float Ia, float Ra){
-	float ret;
+double calculateAmbient(double colour, double lightSourceColour, double Ia, double Ra){
+	double ret;
 	ret =  Ia * Ra;
 
 	return colour * Ra;
 }
 
-float calculateDiffuse(float colour, Position lightToHitPoint, Position hitPointNormal, Position lightSourcePos, float lightSourceColour, float Is, float Rd){
-	float a;
-	float ret;
+double calculateDiffuse(double colour, Position lightToHitPoint, Position hitPointNormal, Position lightSourcePos, double lightSourceColour, double Is, double Rd){
+	double a;
+	double ret;
 
 	// Get angle from 
 	a = dotProduct(hitPointNormal, lightToHitPoint);
@@ -914,8 +913,8 @@ float calculateDiffuse(float colour, Position lightToHitPoint, Position hitPoint
 	return colour * (Is * Rd * a);
 }
 
-float calculateSpecular(float colour, Position lightRay, Position reflectionRay, float lightSourceColour, float Is, float Rs, float f){
-	float ret;
+double calculateSpecular(double colour, Position lightRay, Position reflectionRay, double lightSourceColour, double Is, double Rs, double f){
+	double ret;
 	/*
 	lightRay.x *= -1;
 	lightRay.y *= -1;
@@ -932,8 +931,8 @@ float calculateSpecular(float colour, Position lightRay, Position reflectionRay,
 }
 
 Colour clipColour(Colour colour){
-	float total = colour.r + colour.g + colour.b;
-	float extra = total - 255 * 3;
+	double total = colour.r + colour.g + colour.b;
+	double extra = total - 255 * 3;
 
 	if(extra > 0){
 		colour.r = colour.r*(colour.r/total);
@@ -974,7 +973,7 @@ Position getSphereNormal(Position sphereCenter, Position hitPoint){
 
 Position getReflectionRay(Position campos, Position hitPoint, Position normal){
 	Position eyeRay;
-	float dotProd;
+	double dotProd;
 
 	eyeRay.x = hitPoint.x - campos.x;
 	eyeRay.y = hitPoint.y - campos.y;
@@ -990,10 +989,10 @@ Position getReflectionRay(Position campos, Position hitPoint, Position normal){
 }
 
 int findClosestIntersectionPoint(Ray cameraRay, int x, int y){
-	int currentClosestZ;
+	double currentClosestZ;
 	int returnId;
-	int intersectionT;
-	int intersectionZVal;
+	double intersectionT;
+	double intersectionZVal;
 	Sphere *testSphere;
 	Plane *testPlane;
 	Triangle *testTriangle;
@@ -1063,9 +1062,6 @@ void rayTrace(pixel* Im){
 	Position camright;
 	Position camdown;
 	Position originVec;
-	Sphere sphere;
-	Plane* plane;
-	Triangle* triangle;	
 	Position cam_ray_origin;
 	Position cam_ray_direction;
 	Ray camera_ray;
@@ -1136,19 +1132,6 @@ void rayTrace(pixel* Im){
 
 	aspectratio = (double)screenWidth/(double)screenWidth;
 
-	//Plane stuff
-	//Need to be part of file reader
-
-	plane = (Plane*)malloc(sizeof (struct Plane));
-	
-	// Needs to be calculated not manually set
-
-	plane->normal.x = X.x;
-	plane->normal.y = X.y;
-	plane->normal.z = X.z;
-
-	plane->distance = -1;
-
 	//Triangle stuff
 
 	//triangle->A = normalize(triangle->A);
@@ -1159,21 +1142,19 @@ void rayTrace(pixel* Im){
 
 	//triangle->distance = getTriangleDistance(triangle);
 
-	/*printf("normal of triangle x %f",triangle->normal.x);
+	/*printf("normal of triangle x %lf",triangle->normal.x);
 	printf("\n");
-	printf("normal of triangle y %f",triangle->normal.y);
+	printf("normal of triangle y %lf",triangle->normal.y);
 	printf("\n");
-	printf("normal of triangle z %f",triangle->normal.z);
+	printf("normal of triangle z %lf",triangle->normal.z);
 	printf("\n");*/
 
-	//printf("distance of triangle %f",triangle->distance);
+	//printf("distance of triangle %lf",triangle->distance);
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
 			double intersectionT;
-			double planeIntersection;
-			double triangleIntersection;
-			float r,g,b;
-			float r2,g2,b2;
+			double r,g,b;
+			double r2,g2,b2;
 						
 			Position p;
 			Position direction;
@@ -1215,6 +1196,8 @@ void rayTrace(pixel* Im){
 			direction.z = p.z - camera_ray.origin.z;
 
 			direction = normalize(direction);		
+
+			camera_ray.direction = direction;
 			
 			//triangleIntersection = triangleIntersect(camera_ray, triangle);
 
@@ -1320,25 +1303,35 @@ void rayTrace(pixel* Im){
 				calcColour.b = b;
 
 				calcColour = clipColour(calcColour);
+				Im[i+j*screenWidth].r = calcColour.r;					
+			Im[i+j*screenWidth].g = calcColour.g;
+			Im[i+j*screenWidth].b = calcColour.b;
 			}
 			else if(testPlane){				
 				calcColour.r = testPlane->col.r;
 				calcColour.g = testPlane->col.g;
 				calcColour.b = testPlane->col.b;
+				Im[i+j*screenWidth].r = calcColour.r;					
+			Im[i+j*screenWidth].g = calcColour.g;
+			Im[i+j*screenWidth].b = calcColour.b;
 			}
 			else if(testTriangle){
 				calcColour.r = testTriangle->col.r;
 				calcColour.g = testTriangle->col.g;
 				calcColour.b = testTriangle->col.b;
+				Im[i+j*screenWidth].r = calcColour.r;					
+			Im[i+j*screenWidth].g = calcColour.g;
+			Im[i+j*screenWidth].b = calcColour.b;
 			}
 			else{
 				calcColour.r = 0;
 				calcColour.g = 0;
 				calcColour.b = 0;
-			}
-			Im[i+j*screenWidth].r = calcColour.r;					
+				Im[i+j*screenWidth].r = calcColour.r;					
 			Im[i+j*screenWidth].g = calcColour.g;
 			Im[i+j*screenWidth].b = calcColour.b;
+			}
+			
 		}
 	}
 }
