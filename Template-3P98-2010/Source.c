@@ -500,10 +500,258 @@ double findPlaneIntersection(Ray ray, Plane* plane){
 	}	
 }
 
+//Triangles
+
+Position getTriangleNormal(Position A, Position B, Position C){
+	Position CA;
+	Position BA;
+	Position normal;
+	CA.x = C.x - A.x;
+	CA.y = C.y - A.y;
+	CA.z = C.z - A.z;
+	BA.x = B.x - A.x;
+	BA.y = B.y - A.y;
+	BA.z = B.z - A.z;
+	normal = crossProd(CA, BA);
+	normal = normalize(normal);
+	return normal;
+}//return normal of triangle
+
+double getTriangleDistance(Triangle* t){
+	double distance;
+	distance = dotProduct(t->normal, t->A);
+	return distance;
+}
+
+Position getNormalAt(Triangle t){
+	return t.normal;
+}
+
+//Last Triangle attempt
+
+double triangleIntersect(Ray ray, Triangle* t){
+	Position tempA;
+	Position tempB;
+	Position N;
+	Position P;
+	Position C;
+	Position edge0;
+	Position VP0;
+	Position edge1;
+	Position VP1;
+	Position edge2;
+	Position VP2;
+
+	Position CA;
+	Position CP;
+	double NdotRayDirection;
+	double d;
+	double tempT;
+
+	t->A = normalize(t->A);
+	t->B = normalize(t->B);
+	t->C = normalize(t->C);
+	t->normal = getTriangleNormal(t->A,t->B,t->C);
+
+	tempA.x = t->B.x - t->A.x;
+	tempA.y = t->B.y - t->A.y;
+	tempA.z = t->B.z - t->A.z;
+
+	tempB.x = t->C.x - t->A.x;
+	tempB.y = t->C.y - t->A.y;
+	tempB.z = t->C.z - t->A.z;
+
+	N = crossProd(tempA, tempB);
+	NdotRayDirection = dotProduct(N, ray.direction);
+	if (NdotRayDirection == 0){
+		return -1;
+	}
+	d = dotProduct(N, t->A);
+	tempT = -(((dotProduct(N, ray.origin)) + t->distance) / NdotRayDirection);
+	printf("Temp t %f",tempT);
+	printf("\n");
+	if (tempT < 0){
+		return -1;
+	}
+	//point P = rayOrig + t * rayDir;
+	P.x = ray.origin.x + tempT * ray.direction.x;
+	P.y = ray.origin.y + tempT * ray.direction.y;
+	P.z = ray.origin.z + tempT * ray.direction.z;
+	
+	edge0.x = t->B.x - t->A.x;
+	edge0.y = t->B.y - t->A.y;
+	edge0.z = t->B.z - t->A.z;
+
+	VP0.x = P.x - t->A.x;
+	VP0.y = P.y - t->A.y;
+	VP0.z = P.z - t->A.z;
+
+	C = crossProd(edge0, VP0);
+	printf("dotprod n and c edge 1 %f",dotProduct(N, C));
+	printf("\n");
+	if (dotProduct(N, C) < 0){
+		return -1;
+	}
+
+	edge1.x = t->C.x - t->B.x;
+	edge1.y = t->C.y - t->B.y;
+	edge1.z = t->C.z - t->B.z;
+
+	VP1.x = P.x - t->B.x;
+	VP1.y = P.y - t->B.y;
+	VP1.z = P.z - t->B.z;
+
+	C = crossProd(edge0, VP1);
+	printf("dotprod n and c edge 2 %f",dotProduct(N, C));
+	printf("\n");
+	if (dotProduct(N,C) < 0){
+		return -1;
+	}
+
+	edge2.x = t->A.x - t->C.x;
+	edge2.y = t->A.y - t->C.y;
+	edge2.z = t->A.z - t->C.z;
+
+	VP2.x = P.x - t->C.x;
+	VP2.y = P.y - t->C.y;
+	VP2.z = P.z - t->C.z;
+
+	CA = crossProd(C,t->A);
+	CP = crossProd(C,P);
+
+	C = crossProd(CA,CP);
+	printf("dotprod n and c edge 3 %f",dotProduct(N, C));
+	printf("\n");
+	if (dotProduct(N,C) < 0){
+		return -1;
+	}
+
+	else {
+		return 1;
+	}
+}
+
 //Triangle stuff
+double findTriangleIntersection(Ray ray,Triangle* t){	
+	double a;
+	t->A = normalize(t->A);
+	t->B = normalize(t->B);
+	t->C = normalize(t->C);
+	t->normal = getTriangleNormal(t->A,t->B,t->C);
+	/*printf("t normal sadf x %f",t->normal.x);
+	printf("\n");
+	printf("t normal sadf y %f",t->normal.y);
+	printf("\n");
+	printf("t normal sadf z %f",t->normal.z);
+	printf("\n");*/
+	t->distance = getTriangleDistance(t);
 
-double findTriangleIntersection(Ray ray,Triangle* t){
+	a = dotProduct(ray.direction,t->normal);
+	if (a == 0){//ray is parrallel to plane	
+		return -1;
+	}else{
+		double b;
+		double distanceToPlane;
+		double Qx, Qy, Qz;
+		double test1, test2, test3;
+		Position Q;
+		Position temp;
+		Position multTemp;
+		Position CA;
+		Position QA;
+		Position BC;
+		Position QC;
+		Position AB;
+		Position QB;
+		temp = ray.origin;
+		multTemp = multPositions(t->normal,t->distance);
+		multTemp = negative(multTemp);
+		temp = addPositions(t->normal, temp);
+		b = dotProduct(t->normal, temp);
 
+		distanceToPlane = -1*b/a;
+
+		Qx = (multPositions(ray.direction, distanceToPlane)).x + ray.origin.x;
+		Qy = (multPositions(ray.direction, distanceToPlane)).y + ray.origin.y;
+		Qz = (multPositions(ray.direction, distanceToPlane)).z + ray.origin.z;
+
+		Q.x = Qx;
+		Q.y = Qy;
+		Q.z = Qz;
+
+		Q = normalize(Q);
+
+		/*printf("\n");
+		printf("Q.x %f", Q.x);
+		printf("\n");
+		printf("Q.y %f", Q.y);
+		printf("\n");
+		printf("Q.z %f", Q.z);
+		printf("\n");*/
+
+		// [CAxQA]*n>=0
+		CA.x = t->C.x - t->A.x;
+		CA.y = t->C.y - t->A.y;
+		CA.z = t->C.z - t->A.z;
+
+		QA.x = Q.x - t->A.x;
+		QA.y = Q.y - t->A.y;
+		QA.z = Q.z - t->A.z;
+
+		CA = normalize(CA); //normalize
+		QA = normalize(QA); //normalize
+
+		test1 = dotProduct(crossProd(CA, QA),t->normal);	
+
+		// [BCxQC]*n>=0
+		BC.x = t->B.x - t->C.x;
+		BC.y = t->B.y - t->C.y;
+		BC.z = t->B.z - t->C.z;
+
+		QC.x = Q.x - t->C.x;
+		QC.y = Q.y - t->C.y;
+		QC.z = Q.z - t->C.z;
+
+		BC = normalize(BC); //normalize
+		QC = normalize(QC); //normalize
+
+		test2 = dotProduct(crossProd(BC, QC),t->normal);	
+
+		// [ABxQB]*n>=0
+		AB.x = t->A.x - t->B.x;
+		AB.y = t->A.y - t->B.y;
+		AB.z = t->A.z - t->B.z;
+
+		QB.x = Q.x - t->B.x;
+		QB.y = Q.y - t->B.y;
+		QB.z = Q.z - t->B.z;
+
+		AB = normalize(AB); //normalize
+		QB = normalize(QB); //normalize
+
+		test3 = dotProduct(crossProd(AB, QB),t->normal);
+
+		if ((test2 >= 0) && (test1 >= 0)){
+		printf("\n");
+		printf("test1 %f", test1);
+		printf("\n");
+		printf("test2 %f", test2);
+		printf("\n");
+		printf("test3 %f", test3);
+		printf("\n");
+		}
+		//test if inside triangle
+		if ((test1 >= 0) && (test2 >= 0) && (test3 >= 0)){
+			//inside triangle
+			return -1*b/a;
+		} else {
+			return -1;//outside triangle
+		}		
+	}
+}
+
+/*double findTriangleIntersection(Ray ray,Triangle* t){
+	
 
 	double a = dotProduct(ray.direction,t->normal);
 	if (a == 0){//ray is parrallel to plane	
@@ -547,7 +795,8 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 		QA.y = Q.y - t->A.y;
 		QA.z = Q.z - t->A.z;
 
-		test1 = dotProduct(crossProd(CA, QA),t->normal);		
+		test1 = dotProduct(crossProd(CA, QA),t->normal);	
+
 		// [BCxQC]*n>=0
 		BC.x = t->B.x - t->C.x;
 		BC.y = t->B.y - t->C.y;
@@ -568,6 +817,15 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 		QB.z = Q.z - t->B.z;
 
 		test3 = dotProduct(crossProd(AB, QB),t->normal);
+
+		printf("\n");
+		printf("test1 %f", test1);
+		printf("\n");
+		printf("test2 %f", test2);
+		printf("\n");
+		printf("test3 %f", test3);
+		printf("\n");
+
 		//test if inside triangle
 		if ((test1 >= 0) && (test2 >= 0) && (test3 >= 0)){
 			//inside triangle
@@ -576,31 +834,8 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 			return -1;//outside triangle
 		}		
 	}
-}
+}*/
 
-Position getTriangleNormal(Position A, Position B, Position C, Colour c){
-	Position CA;
-	Position BA;
-	Position normal;
-	CA.x = C.x - A.x;
-	CA.y = C.y - A.y;
-	CA.z = C.z - A.z;
-	BA.x = B.x - A.x;
-	BA.y = B.y - A.y;
-	BA.z = B.z - A.z;
-	normal = crossProd(CA, BA);
-	normal = normalize(normal);
-	return normal;
-}//return normal of triangle
-
-double getTriangleDistance(Triangle t){
-	double distance;
-	distance = dotProduct(t.normal, t.A);
-}
-
-Position getNormalAt(Triangle t){
-	return t.normal;
-}
 
 
 
@@ -889,24 +1124,40 @@ void rayTrace(pixel* Im){
 
 	triangle = (Triangle*)malloc(sizeof (struct Triangle));
 
-	triangle->A.x = 320;
-	triangle->A.y = 320;
-	triangle->A.z = 520;
+	triangle->A.x = 300;
+	triangle->A.y = 300;
+	triangle->A.z = 500;
 
-	triangle->B.x = 320;
-	triangle->B.y = 420;
-	triangle->B.z = 520;
+	triangle->B.x = 500;
+	triangle->B.y = 300;
+	triangle->B.z = 500;
 
-	triangle->C.x = 320;
-	triangle->C.y = 320;
-	triangle->C.z = 420;
+	triangle->C.x = 100;
+	triangle->C.y = 600;
+	triangle->C.z = 500;
 
 	triangle->color.r = 0;
 	triangle->color.b = 255;
 	triangle->color.g = 0;
 
 
-	
+	//triangle->A = normalize(triangle->A);
+	//triangle->B = normalize(triangle->B);
+	//triangle->C = normalize(triangle->C);
+
+	//triangle->normal = getTriangleNormal(triangle->A,triangle->B,triangle->C);
+
+	//triangle->distance = getTriangleDistance(triangle);
+
+	/*printf("normal of triangle x %f",triangle->normal.x);
+	printf("\n");
+	printf("normal of triangle y %f",triangle->normal.y);
+	printf("\n");
+	printf("normal of triangle z %f",triangle->normal.z);
+	printf("\n");*/
+
+	//printf("distance of triangle %f",triangle->distance);
+
 	/*printf("\n");
 	printf("plane stuff normal x %f",plane->normal.x);
 	printf("\n");
@@ -1026,14 +1277,14 @@ void rayTrace(pixel* Im){
 			
 			planeIntersection = findIntersection(camera_ray, plane);
 
-			triangleIntersection = findTriangleIntersection(camera_ray, triangle);
+			//triangleIntersection = triangleIntersect(camera_ray, triangle);
 
-			if (triangleIntersection > 0){
+			/*if (triangleIntersection > 0){
 				Im[i+j*screenWidth].r = 0;
 				Im[i+j*screenWidth].b = 255;
 				Im[i+j*screenWidth].g = 0;
-			}
-			if (planeIntersection>0){				
+			}*/
+			if (planeIntersection>0){
 				Im[i+j*screenWidth].r = 0;
 				Im[i+j*screenWidth].b = 0;
 				Im[i+j*screenWidth].g = 255;
