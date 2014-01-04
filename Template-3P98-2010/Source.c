@@ -153,9 +153,11 @@ typedef struct {
 	struct Sphere *sph;
 	struct Plane *pla;
 	struct Donut *don;
+	struct Triangle *tri;
 	struct LightSource *lig;
 	pixel *data;
 	pixel *tempData;
+	int idCount;
 } glob;
 glob global;
 
@@ -267,6 +269,8 @@ void readFile(){
 		while(!feof(file)){
 			if(i == 0){
 				s = (Sphere*)malloc(sizeof (struct Sphere));
+				s->id = global.idCount;
+				global.idCount++;
 				fscanf(file, "%f", &i);
 				s->pos.x = i;
 				fscanf(file, "%f", &i);
@@ -308,6 +312,8 @@ void readFile(){
 			}
 			else if(i == 8){
 				l = (LightSource*)malloc(sizeof (struct LightSource));
+				l->id = global.idCount;
+				global.idCount++;
 				fscanf(file, "%f", &i);
 				l->pos.x = i;
 				fscanf(file, "%f", &i);
@@ -407,55 +413,6 @@ Position multPositions(Position v, double scalar){
 	temp.y = v.y*scalar;
 	temp.z = v.z*scalar;
 	return temp;
-}
-
-//Plane intersection
-
-
-double findIntersection(Ray ray,Plane* p){
-	double a = dotProduct(ray.direction,p->normal);
-	if (a == 0){//ray is parrallel to plane	
-		return -1;
-	}else{
-		double b;
-		Position temp;
-		Position multTemp;
-		temp = ray.origin;
-		multTemp = multPositions(p->normal,p->distance);
-		multTemp = negative(multTemp);
-		temp = addPositions(p->normal, temp);
-		b = dotProduct(p->normal, temp);
-		return -1*b/a;
-	}
-}
-
-double findSphereIntersection(Ray ray, Sphere* sphere){
-	/*findSphere intersection, finds the intersection between
-	the sphere and ray, returns root, -1 if missed*/
-	double a = 1;
-	double b = (2*(ray.origin.x - sphere->pos.x)*ray.direction.x) + (2*(ray.origin.y - sphere->pos.y)*ray.direction.y) + (2*(ray.origin.z - sphere->pos.z)*ray.direction.z);
-	double c = pow(ray.origin.x - sphere->pos.x, 2) + pow(ray.origin.y - sphere->pos.y, 2) + pow(ray.origin.z - sphere->pos.z, 2) - (sphere->rad.totalRadius*sphere->rad.totalRadius);
-
-	double discriminant = b*b - 4*c;
-
-	if (discriminant > 0) {
-		//ray intersects sphere
-		//first root
-		double root_1 = ((-1*b - sqrt(discriminant))/2) - 0.0001;
-		if (root_1 > 0){
-			//first root is smallest positive root
-			return root_1;
-		}
-		else {
-			//the second root is the smallest positive root			
-			double root_2 = ((sqrt(discriminant) - b)/2) - 0.0001;
-			return root_2;
-		}
-	}
-	else {
-		//ray missed sphere
-		return -1;
-	}
 }
 
 double testFindSphere (Ray ray, Sphere* sphere){
@@ -602,29 +559,6 @@ Position getNormalAt(Triangle t){
 	return t.normal;
 }
 
-
-
-/*
-ray details sheet
-type: 
-x pos:
-y pos:
-z pos:
-width:
-height:
-depth:
-radius:
-angle x:
-angle y:
-angle z:
-colour r:
-colour g:
-colour b:
-transparency:
-
-
-*/
-
 float calculateAmbient(float colour, float lightSourceColour, float Ia, float Ra){
 	float ret;
 	ret =  Ia * Ra;
@@ -733,6 +667,63 @@ Position getReflectionRay(Position campos, Position hitPoint, Position normal){
 	return eyeRay;
 }
 
+int findClosestIntersectionPoint(Ray cameraRay, int x, int y){
+	int currentClosestZ;
+	int returnId;
+	int intersectionT;
+	int intersectionZVal;
+	Sphere *testSphere;
+	Plane *testPlane;
+	Triangle *testTriangle;
+
+	testSphere = global.sph;
+	testPlane = global.pla;
+	testTriangle = global.tri;
+
+	returnId = -1;
+
+	while(testSphere){
+		intersectionT = testFindSphere(cameraRay, testSphere);
+		
+		if(intersectionT > 0){
+			intersectionZVal = cameraRay.origin.z + cameraRay.direction.z*intersectionT;
+			if(intersectionZVal < currentClosestZ){
+				currentClosestZ = intersectionZVal;
+				returnId = testSphere->id;
+			}
+		}
+		testSphere = testSphere->next;
+	}
+
+	while(testPlane){
+		intersectionT = findPlaneIntersection(cameraRay, testPlane);
+
+		if(intersectionT > 0){
+			intersectionZVal = cameraRay.origin.z + cameraRay.direction.z*intersectionT;
+			if(intersectionZVal < currentClosestZ){
+				currentClosestZ = intersectionZVal;
+				returnId = testPlane->id;
+			}
+		}
+		testPlane = testPlane->next;
+	}
+
+	while(testTriangle){
+		intersectionT = findTriangleIntersection(cameraRay, testTriangle);
+
+		if(intersectionT > 0){
+			intersectionZVal = cameraRay.origin.z + cameraRay.direction.z*intersectionT;
+			if(intersectionZVal < currentClosestZ){
+				currentClosestZ = intersectionZVal;
+				returnId = testTriangle->id;
+			}
+		}
+		testTriangle = testTriangle->next;
+	}
+
+	return returnId;
+}
+
 void rayTrace(pixel* Im){
 	//Ray declaration stuff
 	int i,j;
@@ -772,15 +763,6 @@ void rayTrace(pixel* Im){
 	Position campos;
 	Light scene_light;
 
-	//glClear(GL_COLOR_BUFFER_BIT);
-
-	//glMatrixMode(GL_MODELVIEW);
-
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//glMatrixMode(GL_MODELVIEW);
-
-
 	//Ray stuff	
 
 	X.x = 1;
@@ -795,19 +777,9 @@ void rayTrace(pixel* Im){
 	Z.y = 0;
 	Z.z = 1;
 
-	//campos (3,.5,-4) above y plane
-
 	campos.x = screenWidth/2;
 	campos.y = screenWidth/2;
-	//campos.z = -10000;
 	campos.z = -10;
-	//campos.z = -1000;
-
-
-	/*campos.x = 3;
-	campos.y = 1.5;
-	campos.z = -4;*/
-	
 
 	look_at.x = 0;
 	look_at.y = 0;
@@ -816,12 +788,7 @@ void rayTrace(pixel* Im){
 	diff_btw.x = campos.x-look_at.x;
 	diff_btw.y = campos.y-look_at.y;
 	diff_btw.z = campos.z-look_at.z;
-
-	//camdir is diff_btw neg.normalize
-	//camright y.crossprod(camdir).normalize
-	//camdown camright.crossprod(camdir)
-	//camera scene cam (campos, cam dir, right, camdown)
-
+	
 	camdir = normalize(negative(diff_btw));
 	camright = normalize(crossProd(camdir,Y));
 	camdown = crossProd(camdir,camright);
@@ -831,38 +798,13 @@ void rayTrace(pixel* Im){
 	camera.camright = camright;
 	camera.campdir = camdir;
 
-
 	light_pos.x = -7;
 	light_pos.y = 10;
 	light_pos.z = -10;
 
-
-	//Basic Light declarations
-	white.r = 1.0;
-	white.g = 1.0;
-	white.b = 1.0;
-
-	green.r = 0.5;
-	green.g = 1.0;
-	green.b = 0.5;
-
-	black.r = 0.0;
-	black.g = 0.0;
-	black.b = 0.0;
-
 	planeColor.r = 0.5;
 	planeColor.g = 0.25;
 	planeColor.b = 0.25;
-	
-	//Sphere sphere is a sphere
-
-	originVec.x = 0;
-	originVec.y = 0;
-	originVec.z = 0;
-
-	//Scene light is white with Position or position
-	scene_light.c = white;
-	scene_light.v = light_pos;
 
 	readFile();
 
@@ -873,9 +815,7 @@ void rayTrace(pixel* Im){
 
 	plane = (Plane*)malloc(sizeof (struct Plane));
 	
-	/*plane->normal.x = Y.x;
-	plane->normal.y = Y.y;
-	plane->normal.z = Y.z;*/
+	// Needs to be calculated not manually set
 
 	plane->normal.x = X.x;
 	plane->normal.y = X.y;
@@ -905,35 +845,6 @@ void rayTrace(pixel* Im){
 	triangle->color.b = 255;
 	triangle->color.g = 0;
 
-
-	
-	/*printf("\n");
-	printf("plane stuff normal x %f",plane->normal.x);
-	printf("\n");
-	printf("plane stuff normal y %f",plane->normal.y);
-	printf("\n");
-	printf("plane stuff normal z %f",plane->normal.z);*/
-	
-
-	//DEBUG STUFF
-	/*global.sph->col = green;
-
-	printf("\n");
-	printf("sphere.x %f",global.sph->pos.x);
-	printf("\n");
-	printf("sphere.y %f",global.sph->pos.y);
-	printf("\n");
-	printf("sphere.z %f",global.sph->pos.z);
-	printf("\n");
-	printf("sphere.totalrad %f",global.sph->rad.totalRadius);
-	printf("\n");
-	printf("sphere.color.r %f",global.sph->col.r);
-	printf("\n");
-	printf("sphere.color.g %f",global.sph->col.g);
-	printf("\n");
-	printf("sphere.color.b %f",global.sph->col.b);
-	printf("\n");*/
-
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){		
 			double intersectionT;
@@ -949,25 +860,8 @@ void rayTrace(pixel* Im){
 
 			p.x = i;
 			p.y = j;			
-			//p.z = -5000; //Need to determine proper z value
 			p.z = 1000;
 			
-			//direction of ray
-			//image is square
-			/*xamount = (i+0.5)/screenWidth;
-			yamount = ((screenWidth - j)+0.5)/screenWidth;
-			cam_ray_origin = camera.campos;
-			innerTemp3 = camright;
-			multPositions(innerTemp3,(xamount-0.5));
-			innerTemp = camdir;
-			addPositions(innerTemp, innerTemp3);
-			innerTemp2 = camdown;
-			multPositions(innerTemp2,(yamount-0.5));
-			innerTemp2 = normalize(innerTemp2);
-			addPositions(innerTemp, innerTemp2);
-			camera_ray.origin = cam_ray_origin;
-			camera_ray.direction = innerTemp;*/
-
 			innerTemp.x = 0;
 			innerTemp.y = 0;
 			innerTemp.z = 0;
@@ -1098,12 +992,12 @@ void rayTrace(pixel* Im){
 							
 							
 							// Specular Calculation
-							
+							/*
 							reflectionRay = getReflectionRay(campos, raySphereIntersection, sphereNormal);
 							r2 += calculateSpecular(testSphere->col.r, lightVector, reflectionRay, lightSource->col.r, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
 							g2 += calculateSpecular(testSphere->col.g, lightVector, reflectionRay, lightSource->col.g, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
 							b2 += calculateSpecular(testSphere->col.b, lightVector, reflectionRay, lightSource->col.b, lightSource->Is, testSphere->eff.Rs, testSphere->eff.f);
-							
+							*/
 
 							r += r2;
 							g += g2;
@@ -1144,6 +1038,8 @@ main(int argc, char **argv)
 {
 	// Initialize game settings
 	screenWidth = 800;	
+
+	global.idCount = 10000000;
 
 	global.data = (pixel *)malloc((screenWidth)*(screenWidth)*sizeof(pixel *));
 
