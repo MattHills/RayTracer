@@ -527,18 +527,30 @@ Position multPositions(Position v, double scalar){
 
 double findIntersectionTestObject(Ray ray, testObj* sphere){
 	double a = 1;
-	double b = 2*(ray.direction.x*(ray.origin.x-sphere->pos.x)+ray.direction.y*(ray.origin.y-sphere->pos.y)+ray.direction.z*(ray.origin.z-sphere->pos.z));
-	double c = pow(ray.origin.x - sphere->pos.x, 2) + pow(ray.origin.y - sphere->pos.y, 2) + pow(ray.origin.z - sphere->pos.z, 2) - pow(sphere->rad.totalRadius,2);
+	double b = 2*(ray.direction.x*(ray.origin.x-sphere->pos1.x)+ray.direction.y*(ray.origin.y-sphere->pos1.y)+ray.direction.z*(ray.origin.z-sphere->pos1.z));
+	double c = pow(ray.origin.x - sphere->pos1.x, 2) + pow(ray.origin.y - sphere->pos1.y, 2) + pow(ray.origin.z - sphere->pos1.z, 2) - pow(sphere->rad.totalRadius,2);
 	
 	double disc = pow(b,2)-4*c;
+
+	double tempa = 1;
+	double tempb = 2*(ray.direction.x*(ray.origin.x-sphere->pos2.x)+ray.direction.y*(ray.origin.y-sphere->pos2.y)+ray.direction.z*(ray.origin.z-sphere->pos2.z));
+	double tempc = pow(ray.origin.x - sphere->pos2.x, 2) + pow(ray.origin.y - sphere->pos2.y, 2) + pow(ray.origin.z - sphere->pos2.z, 2) - pow(sphere->rad.totalRadius,2);
+	
+	double tempdisc = pow(tempb,2)-4*c;
 
 	double t0;
 	double t1;
 
+	double t3;
+	double t4;
+
 	t0 = (((-1)*b-sqrt(disc))/2);
 	t1 = (((-1)*b+sqrt(disc))/2);
 
-	if (disc < 0){
+	t3 = (((-1)*b-sqrt(tempdisc))/2);
+	t4 = (((-1)*b+sqrt(tempdisc))/2);
+
+	if (disc < 0 || tempdisc < 0){
 		//no intersection
 		return -1;
 	} else{
@@ -546,6 +558,10 @@ double findIntersectionTestObject(Ray ray, testObj* sphere){
 			return t0;
 		} else  if (t1>0){
 			return t1;
+		} else if(t3>0){
+			return t3;
+		} else if (t4>0){
+			return t4;
 		}
 	}
 }
@@ -1185,9 +1201,17 @@ void rayTrace(pixel* Im){
 
 	testObject = (testObj*)malloc(sizeof (struct testObj));
 
-	testObject->pos.x =	400;	
-	testObject->pos.y = 300;
-	testObject->pos.z = 500;
+	/*testObject->pos1.x = 400;	
+	testObject->pos1.y = 300;
+	testObject->pos1.z = 500;*/
+
+	testObject->pos1.x = 400;	
+	testObject->pos1.y = 300;
+	testObject->pos1.z = 500;
+
+	testObject->pos2.x = 500;	
+	testObject->pos2.y = 300;
+	testObject->pos2.z = 500;
 
 	testObject->rad.totalRadius = 10;
 
@@ -1195,14 +1219,7 @@ void rayTrace(pixel* Im){
 	testObject->col.g = 0;
 	testObject->col.b = 0;
 
-	printf("testObject position x: %f",testObject->pos.x);
-	printf("\n");
-	printf("testObject position y: %f",testObject->pos.y);
-	printf("\n");
-	printf("testObject position z: %f",testObject->pos.z);
-	printf("\n");
-	printf("testObject radius: %f",testObject->rad.totalRadius);
-	printf("\n");
+
 
 	//Triangle stuff
 
