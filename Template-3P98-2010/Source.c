@@ -68,8 +68,7 @@ typedef struct Donut {
 
 typedef struct testObj{
 	int id;
-	Position pos1;
-	Position pos2;
+	Position pos;
 	Radius rad;
 	Colour col;
 	MaterialEffects eff;
@@ -526,31 +525,23 @@ Position multPositions(Position v, double scalar){
 }
 
 double findIntersectionTestObject(Ray ray, testObj* sphere){
-	double a = 1;
-	double b = 2*(ray.direction.x*(ray.origin.x-sphere->pos1.x)+ray.direction.y*(ray.origin.y-sphere->pos1.y)+ray.direction.z*(ray.origin.z-sphere->pos1.z));
-	double c = pow(ray.origin.x - sphere->pos1.x, 2) + pow(ray.origin.y - sphere->pos1.y, 2) + pow(ray.origin.z - sphere->pos1.z, 2) - pow(sphere->rad.totalRadius,2);
-	
-	double disc = pow(b,2)-4*c;
+	/*double a = (pow(ray.direction.x,2) + pow(ray.direction.y,2));
+	double b = 2*((ray.origin.x)*(ray.direction.x))+2*((ray.origin.y)*(ray.direction.y));
+	double c = pow(ray.origin.x, 2) + pow(ray.origin.y, 2) - 1;*/
 
-	double tempa = 1;
-	double tempb = 2*(ray.direction.x*(ray.origin.x-sphere->pos2.x)+ray.direction.y*(ray.origin.y-sphere->pos2.y)+ray.direction.z*(ray.origin.z-sphere->pos2.z));
-	double tempc = pow(ray.origin.x - sphere->pos2.x, 2) + pow(ray.origin.y - sphere->pos2.y, 2) + pow(ray.origin.z - sphere->pos2.z, 2) - pow(sphere->rad.totalRadius,2);
+	double a = (pow(ray.direction.z,2) + pow(ray.direction.y,2));
+	double b = 2*((ray.origin.z)*(ray.direction.z))+2*((ray.origin.y)*(ray.direction.y));
+	double c = pow(ray.origin.z, 2) + pow(ray.origin.y, 2) - 1;
 	
-	double tempdisc = pow(tempb,2)-4*c;
+	double disc = pow(b,2)-4*a*c;
 
 	double t0;
 	double t1;
 
-	double t3;
-	double t4;
+	t0 = (((-1)*b-sqrt(disc))/2*a);
+	t1 = (((-1)*b+sqrt(disc))/2*a);
 
-	t0 = (((-1)*b-sqrt(disc))/2);
-	t1 = (((-1)*b+sqrt(disc))/2);
-
-	t3 = (((-1)*b-sqrt(tempdisc))/2);
-	t4 = (((-1)*b+sqrt(tempdisc))/2);
-
-	if (disc < 0 || tempdisc < 0){
+	if (disc < 0){
 		//no intersection
 		return -1;
 	} else{
@@ -558,11 +549,7 @@ double findIntersectionTestObject(Ray ray, testObj* sphere){
 			return t0;
 		} else  if (t1>0){
 			return t1;
-		} else if(t3>0){
-			return t3;
-		} else if (t4>0){
-			return t4;
-		}
+		} 
 	}
 }
 
@@ -1205,13 +1192,13 @@ void rayTrace(pixel* Im){
 	testObject->pos1.y = 300;
 	testObject->pos1.z = 500;*/
 
-	testObject->pos1.x = 400;	
-	testObject->pos1.y = 300;
-	testObject->pos1.z = 500;
+	testObject->pos.x = 400;	
+	testObject->pos.y = 300;
+	testObject->pos.z = 500;
 
-	testObject->pos2.x = 500;	
+	/*testObject->pos2.x = 500;	
 	testObject->pos2.y = 300;
-	testObject->pos2.z = 500;
+	testObject->pos2.z = 500;*/
 
 	testObject->rad.totalRadius = 10;
 
@@ -1329,6 +1316,7 @@ void rayTrace(pixel* Im){
 			}
 
 			if(testSphere){
+
 				intersectionT = testFindSphere(camera_ray, testSphere);
 				raySphereIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
 				raySphereIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
@@ -1416,15 +1404,15 @@ void rayTrace(pixel* Im){
 			Im[i+j*screenWidth].r = calcColour.r;					
 			Im[i+j*screenWidth].g = calcColour.g;
 			Im[i+j*screenWidth].b = calcColour.b;
-		}
+			//
 			testobjectvalue = findIntersectionTestObject(camera_ray, testObject);
 			if (testobjectvalue>0){
 				Im[i+j*screenWidth].r = 255;					
 				Im[i+j*screenWidth].g = 0;
 				Im[i+j*screenWidth].b = 0;
 			}
+			//
 		}
-
 	}
 }
 
