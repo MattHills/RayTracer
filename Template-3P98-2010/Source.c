@@ -1246,7 +1246,7 @@ void rayTrace(pixel* Im){
 
 	/*testObject->pos1.x = 400;	
 	testObject->pos1.y = 300;
-	testObject->pos1.z = 500;*/
+	testObject->pos1.z = 500;
 
 	testObject->pos1.x = 400;	
 	testObject->pos1.y = 300;
