@@ -66,6 +66,16 @@ typedef struct Donut {
 	struct Donut *next;
 } Donut;
 
+typedef struct testObj{
+	int id;
+	Position pos1;
+	Position pos2;
+	Radius rad;
+	Colour col;
+	MaterialEffects eff;
+	struct testObj *next;
+} testObj;
+
 // Plane shape
 typedef struct Plane {
 	int id;
@@ -110,12 +120,26 @@ typedef struct Rect {
 } Rect;
 
 // Cylinder shape
-typedef struct Cylinder{
+/*typedef struct Cylinder{
 	int id;
 	Position pos;	
 	Size size;
 	Radius rad;	
 	Angle ang;
+	Colour col;	
+	MaterialEffects eff;
+	struct Cylinder *next;
+} Cylinder;*/
+
+//infinite clinder
+typedef struct Cylinder{
+	int id;
+	Position pos1;//bottom position of cylinder
+	Position pos2;//top position of cylinder
+	Position center;
+	Radius rad;	
+	double axis;
+	//double distance;
 	Colour col;	
 	MaterialEffects eff;
 	struct Cylinder *next;
@@ -501,6 +525,31 @@ Position multPositions(Position v, double scalar){
 	return temp;
 }
 
+double findIntersectionTestObject(Ray ray, testObj* sphere){
+	double a = 1;
+	double b = 2*(ray.direction.x*(ray.origin.x-sphere->pos.x)+ray.direction.y*(ray.origin.y-sphere->pos.y)+ray.direction.z*(ray.origin.z-sphere->pos.z));
+	double c = pow(ray.origin.x - sphere->pos.x, 2) + pow(ray.origin.y - sphere->pos.y, 2) + pow(ray.origin.z - sphere->pos.z, 2) - pow(sphere->rad.totalRadius,2);
+	
+	double disc = pow(b,2)-4*c;
+
+	double t0;
+	double t1;
+
+	t0 = (((-1)*b-sqrt(disc))/2);
+	t1 = (((-1)*b+sqrt(disc))/2);
+
+	if (disc < 0){
+		//no intersection
+		return -1;
+	} else{
+		if (t0>0){
+			return t0;
+		} else  if (t1>0){
+			return t1;
+		}
+	}
+}
+
 double testFindSphere (Ray ray, Sphere* sphere){
 	double a = 1;
 	double b = 2*(ray.direction.x*(ray.origin.x-sphere->pos.x)+ray.direction.y*(ray.origin.y-sphere->pos.y)+ray.direction.z*(ray.origin.z-sphere->pos.z));
@@ -774,15 +823,13 @@ double findTriangleIntersection(Ray ray,Triangle* t){
 
 		test3 = dotProduct(crossProd(AB, QB),t->normal);
 
-		if ((test2 >= 0) && (test1 >= 0)){
-		printf("\n");
+		/*printf("\n");
 		printf("test1 %lf", test1);
 		printf("\n");
 		printf("test2 %lf", test2);
 		printf("\n");
 		printf("test3 %lf", test3);
-		printf("\n");
-		}
+		printf("\n");*/
 		//test if inside triangle
 		if ((test1 >= 0) && (test2 >= 0) && (test3 >= 0)){
 			//inside triangle
@@ -1068,6 +1115,8 @@ void rayTrace(pixel* Im){
 	Sphere *testSphere;
 	Plane *testPlane;
 	Triangle *testTriangle;
+	Triangle *nextTriangletest;
+	testObj *testObject;
 	LightSource *lightSource;
 
 	//temp Positions	
@@ -1132,6 +1181,29 @@ void rayTrace(pixel* Im){
 
 	aspectratio = (double)screenWidth/(double)screenWidth;
 
+	//testobj
+
+	testObject = (testObj*)malloc(sizeof (struct testObj));
+
+	testObject->pos.x =	400;	
+	testObject->pos.y = 300;
+	testObject->pos.z = 500;
+
+	testObject->rad.totalRadius = 10;
+
+	testObject->col.r = 255;
+	testObject->col.g = 0;
+	testObject->col.b = 0;
+
+	printf("testObject position x: %f",testObject->pos.x);
+	printf("\n");
+	printf("testObject position y: %f",testObject->pos.y);
+	printf("\n");
+	printf("testObject position z: %f",testObject->pos.z);
+	printf("\n");
+	printf("testObject radius: %f",testObject->rad.totalRadius);
+	printf("\n");
+
 	//Triangle stuff
 
 	//triangle->A = normalize(triangle->A);
@@ -1154,8 +1226,13 @@ void rayTrace(pixel* Im){
 		for (j = 0;j<screenWidth;j++){		
 			double intersectionT;
 			double r,g,b;
-			double r2,g2,b2;
-						
+			double r2,g2,b2;						
+
+			//dlete me
+			double testobjectvalue;
+			//dlete
+
+
 			Position p;
 			Position direction;
 			Position raySphereIntersection;			
@@ -1323,6 +1400,14 @@ void rayTrace(pixel* Im){
 			Im[i+j*screenWidth].g = calcColour.g;
 			Im[i+j*screenWidth].b = calcColour.b;
 		}
+			testobjectvalue = findIntersectionTestObject(camera_ray, testObject);
+			if (testobjectvalue>0){
+				Im[i+j*screenWidth].r = 255;					
+				Im[i+j*screenWidth].g = 0;
+				Im[i+j*screenWidth].b = 0;
+			}
+		}
+
 	}
 }
 
