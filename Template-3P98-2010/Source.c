@@ -1353,19 +1353,19 @@ void rayTrace(pixel* Im){
 						lightVector.z = lightSource->pos.z - raySphereIntersection.z;
 						lightVector = normalize(lightVector);
 
-							
+						
 						// Ambient Light Calculation
 						r2 = calculateAmbient(testSphere->col.r, lightSource->col.r, lightSource->Ia, testSphere->eff.Ra);
 						g2 = calculateAmbient(testSphere->col.g, lightSource->col.g, lightSource->Ia, testSphere->eff.Ra);
 						b2 = calculateAmbient(testSphere->col.b, lightSource->col.b, lightSource->Ia, testSphere->eff.Ra);
 						
-							
+						
 						// Diffuse Reflection Calculation
 						sphereNormal = getSphereNormal(testSphere->pos, raySphereIntersection);
 						r2 += calculateDiffuse(testSphere->col.r, lightVector, sphereNormal, lightSource->pos, lightSource->col.r, lightSource->Is, testSphere->eff.Rd);
 						g2 += calculateDiffuse(testSphere->col.g, lightVector, sphereNormal, lightSource->pos, lightSource->col.g, lightSource->Is, testSphere->eff.Rd);
 						b2 += calculateDiffuse(testSphere->col.b, lightVector, sphereNormal, lightSource->pos, lightSource->col.b, lightSource->Is, testSphere->eff.Rd);
-							
+						
 							
 						// Specular Calculation
 						/*
@@ -1397,34 +1397,26 @@ void rayTrace(pixel* Im){
 				calcColour.b = b;
 
 				calcColour = clipColour(calcColour);
-				Im[i+j*screenWidth].r = calcColour.r;					
-			Im[i+j*screenWidth].g = calcColour.g;
-			Im[i+j*screenWidth].b = calcColour.b;
 			}
 			else if(testPlane){				
 				calcColour.r = testPlane->col.r;
 				calcColour.g = testPlane->col.g;
 				calcColour.b = testPlane->col.b;
-				Im[i+j*screenWidth].r = calcColour.r;					
-			Im[i+j*screenWidth].g = calcColour.g;
-			Im[i+j*screenWidth].b = calcColour.b;
 			}
 			else if(testTriangle){
 				calcColour.r = testTriangle->col.r;
 				calcColour.g = testTriangle->col.g;
 				calcColour.b = testTriangle->col.b;
-				Im[i+j*screenWidth].r = calcColour.r;					
-			Im[i+j*screenWidth].g = calcColour.g;
-			Im[i+j*screenWidth].b = calcColour.b;
 			}
 			else{
 				calcColour.r = 0;
 				calcColour.g = 0;
 				calcColour.b = 0;
-				Im[i+j*screenWidth].r = calcColour.r;					
+			}			
+			Im[i+j*screenWidth].r = calcColour.r;					
 			Im[i+j*screenWidth].g = calcColour.g;
 			Im[i+j*screenWidth].b = calcColour.b;
-			}
+		}
 			testobjectvalue = findIntersectionTestObject(camera_ray, testObject);
 			if (testobjectvalue>0){
 				Im[i+j*screenWidth].r = 255;					
