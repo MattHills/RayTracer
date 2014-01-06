@@ -565,6 +565,7 @@ double findIntersectionTestObject(Ray ray, testObj* sphere){
 		}
 	}
 }
+
 double testFindSphere (Ray ray, Sphere* sphere){
 	double a = 1;
 	double b = 2*(ray.direction.x*(ray.origin.x-sphere->pos.x)+ray.direction.y*(ray.origin.y-sphere->pos.y)+ray.direction.z*(ray.origin.z-sphere->pos.z));
@@ -594,9 +595,11 @@ double testFindSphere (Ray ray, Sphere* sphere){
 
 double findPlaneIntersection(Ray ray, Plane* plane){
 	Position planeNormal;
+	Position rayOrigin;
 	double a;
 	//Calculate Plane normal Position dot Ray origin
 	planeNormal = normalize(plane->normal);
+	rayOrigin = normalize(ray.origin);
 	a = dotProduct(planeNormal,ray.origin);
 	//if a==0 ray is parrallel
 	if (a == 0){
@@ -607,7 +610,8 @@ double findPlaneIntersection(Ray ray, Plane* plane){
 		b = dotProduct(planeNormal, ray.direction);
 		t = -1*a/b;	
 		return t;
-	}	
+	}
+	return -1;
 }
 
 //Triangles
@@ -1063,8 +1067,7 @@ int findClosestIntersectionPoint(Ray cameraRay, int x, int y){
 	currentClosestZ = 10000000;
 
 	while(testSphere){
-		intersectionT = testFindSphere(cameraRay, testSphere);
-		
+		intersectionT = testFindSphere(cameraRay, testSphere);		
 		if(intersectionT > 0){
 			intersectionZVal = cameraRay.origin.z + cameraRay.direction.z*intersectionT;
 			if(intersectionZVal < currentClosestZ){
@@ -1107,28 +1110,44 @@ int findClosestIntersectionPoint(Ray cameraRay, int x, int y){
 	return returnId;
 }
 
-int findClearPath(Ray hitPointVector, LightSource *lightSource){
+double square(double x){
+	return x * x;
+}
+
+int findClearPath(Ray hitPointVector, LightSource *lightSource, int closestId){
 	Sphere *testSphere;
 	Plane *testPlane;
 	Triangle *testTriangle;
-	int intersectionT;
+	double intersectionT;
+	Ray normalized;
+	double distance;
+	Position intersection;
 
 	testSphere = global.sph;
 	testPlane = global.pla;
 	testTriangle = global.tri;
-
+	normalized.direction = normalize(hitPointVector.direction);
+	normalized.origin = hitPointVector.origin;
 	while(testSphere){
-		intersectionT = testFindSphere(hitPointVector, testSphere);
-		if(intersectionT > 0){
-			return 0;
+		if(testSphere->id != closestId){
+			intersectionT = testFindSphere(normalized, testSphere);
+			//intersectionT = testFindSphere(hitPointVector, testSphere);
+			if(intersectionT > 0){
+				distance = sqrt(square(hitPointVector.origin.x - hitPointVector.direction.x) + square(hitPointVector.origin.y - hitPointVector.direction.y));
+				if(distance > intersectionT){
+					return 0;
+				}
+			}
 		}
 		testSphere = testSphere->next;
 	}
 	
 	while(testPlane){
-		intersectionT = findPlaneIntersection(hitPointVector, testPlane);
-		if(intersectionT > 0){
-			return 0;
+		if(testPlane->id != closestId){
+			intersectionT = findPlaneIntersection(hitPointVector, testPlane);
+			if(intersectionT > 0){
+				return 0;
+			}
 		}
 		testPlane = testPlane->next;
 	}
@@ -1344,7 +1363,7 @@ void rayTrace(pixel* Im){
 			camera_ray.origin = cam_ray_origin;
 			*/
 			//camera_ray.direction = innerTemp;
-			camera_ray.origin = camera.campos;;
+			camera_ray.origin = camera.campos;
 			camera_ray.direction = innerTemp2;
 
 			/*direction.x = p.x - camera_ray.origin.x;
@@ -1434,6 +1453,10 @@ void rayTrace(pixel* Im){
 				calcColour.r = testPlane->col.r;
 				calcColour.g = testPlane->col.g;
 				calcColour.b = testPlane->col.b;
+				
+				if(j==0 && i==screenWidth-1){
+					x = 0;
+				}
 
 				hitPoint = 1;
 			}
@@ -1505,8 +1528,20 @@ void rayTrace(pixel* Im){
 					// Find if point is in shadow
 					hitRay.origin = rayIntersection;
 					hitRay.direction = lightSource->pos;
+					if(j==0 && i==screenWidth-1){
+						x = 0;
+					}
+					if(j==0 && i==0){
+						x = 0;
+					}
+					if(j==400 && i==400){
+						x = 0;
+					}
+					if(j==380&& i==screenWidth-1){
+						x = 0;
+					}
 
-					clearPath = findClearPath(hitRay, lightSource);
+					clearPath = findClearPath(hitRay, lightSource, closestId);
 
 					if(clearPath == 0){
 						x = 0;
@@ -1538,6 +1573,19 @@ void rayTrace(pixel* Im){
 				calcColour = clipColour(calcColour);
 				
 			}
+			/*
+			if(i==400){
+				calcColour.r = 255;
+				calcColour.g = 0;
+				calcColour.b = 0;
+			}
+			if(j==400){
+				calcColour.r = 255;
+				calcColour.g = 0;
+				calcColour.b = 0;
+			}
+			*/
+
 			Im[i+j*screenWidth].r = calcColour.r;					
 			Im[i+j*screenWidth].g = calcColour.g;
 			Im[i+j*screenWidth].b = calcColour.b;
