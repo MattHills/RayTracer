@@ -68,9 +68,10 @@ typedef struct Donut {
 
 typedef struct testObj{
 	int id;
-	Position pos1;
-	Position pos2;
+	Position pos;
+	Position orient;
 	Radius rad;
+	double height;
 	Colour col;
 	MaterialEffects eff;
 	struct testObj *next;
@@ -525,32 +526,39 @@ Position multPositions(Position v, double scalar){
 	return temp;
 }
 
-double findIntersectionTestObject(Ray ray, testObj* sphere){
-	double a = 1;
-	double b = 2*(ray.direction.x*(ray.origin.x-sphere->pos1.x)+ray.direction.y*(ray.origin.y-sphere->pos1.y)+ray.direction.z*(ray.origin.z-sphere->pos1.z));
-	double c = pow(ray.origin.x - sphere->pos1.x, 2) + pow(ray.origin.y - sphere->pos1.y, 2) + pow(ray.origin.z - sphere->pos1.z, 2) - pow(sphere->rad.totalRadius,2);
+//double findIntersectionTestObject(Ray ray, testObj* sphere){
+	/*double a = (pow(ray.direction.x,2) + pow(ray.direction.y,2));
+	double b = 2*((ray.origin.x)*(ray.direction.x))+2*((ray.origin.y)*(ray.direction.y));
+	double c = pow(ray.origin.x, 2) + pow(ray.origin.y, 2) - 1;*/
 	
-	double disc = pow(b,2)-4*c;
+	/*double a = (pow(ray.direction.z,2) + pow(ray.direction.y,2));
+	double b = 2*((ray.origin.z)*(ray.direction.z))+2*((ray.origin.y)*(ray.direction.y));
+	double c = pow(ray.origin.z, 2) + pow(ray.origin.y, 2) - 1;*/
+	/*double s = 1;
 
-	double tempa = 1;
-	double tempb = 2*(ray.direction.x*(ray.origin.x-sphere->pos2.x)+ray.direction.y*(ray.origin.y-sphere->pos2.y)+ray.direction.z*(ray.origin.z-sphere->pos2.z));
-	double tempc = pow(ray.origin.x - sphere->pos2.x, 2) + pow(ray.origin.y - sphere->pos2.y, 2) + pow(ray.origin.z - sphere->pos2.z, 2) - pow(sphere->rad.totalRadius,2);
+	double a,b,c,d,f;
+
+	double disc;
 	
-	double tempdisc = pow(tempb,2)-4*c;
-
 	double t0;
 	double t1;
 
-	double t3;
-	double t4;
+	d = (s-1)*ray.direction.x;
 
-	t0 = (((-1)*b-sqrt(disc))/2);
-	t1 = (((-1)*b+sqrt(disc))/2);
+	f = 1 +(s-1)*ray.origin.z;
 
-	t3 = (((-1)*b-sqrt(tempdisc))/2);
-	t4 = (((-1)*b+sqrt(tempdisc))/2);
+	a = (pow(ray.direction.x,2) + pow(ray.direction.y,2) - pow(d,2));
+	b = ray.origin.x*ray.direction.x+ray.origin.y*ray.direction.y - f*d;
+	c = pow(ray.origin.x,2) + pow(ray.origin.y,2) - pow(f,2);
 
-	if (disc < 0 || tempdisc < 0){
+	disc = pow((2*b),2) - 4*a*c;
+
+	//disc = pow(b,2)-4*c;
+
+	t0 = (((-1)*b-sqrt(disc))/2*a);
+	t1 = (((-1)*b+sqrt(disc))/2*a);
+
+	if (disc < 0){
 		//no intersection
 		return -1;
 	} else{
@@ -558,13 +566,30 @@ double findIntersectionTestObject(Ray ray, testObj* sphere){
 			return t0;
 		} else  if (t1>0){
 			return t1;
-		} else if(t3>0){
-			return t3;
-		} else if (t4>0){
-			return t4;
 		}
 	}
+}*/
+
+double findIntersectionTestObject(Ray ray, testObj* cylinder){
+	double a;
+	double b;
+	double c;
+	double delta;
+
+	a = ray.direction.x* ray.direction.x + ray.direction.y * ray.direction.y;
+	b = 2 * (ray.origin.x * ray.direction.x + ray.origin.y * ray.direction.y);
+	c = (ray.origin.x * ray.origin.x + ray.origin.y * ray.origin.y) - cylinder->rad.totalRadius;
+
+	delta = b * b - (4 * a * c);
+	if (delta > 0){
+		return -1;
+	}
+	else if (delta == 0){
+		return (-b / (2 * a));
+	}
+	return 10000;
 }
+
 
 double testFindSphere (Ray ray, Sphere* sphere){
 	double a = 1;
@@ -1252,29 +1277,19 @@ void rayTrace(pixel* Im){
 	aspectratio = (double)screenWidth/(double)screenWidth;
 
 	//testobj
-	/*
+	
 	testObject = (testObj*)malloc(sizeof (struct testObj));
 
-	/*testObject->pos1.x = 400;	
-	testObject->pos1.y = 300;
-	testObject->pos1.z = 500;
+	testObject->pos.x = 400;	
+	testObject->pos.y = 300;
+	testObject->pos.z = 400;
 
-	testObject->pos1.x = 400;	
-	testObject->pos1.y = 300;
-	testObject->pos1.z = 500;
+	testObject->rad.totalRadius = 50;
 
-	testObject->pos2.x = 500;	
-	testObject->pos2.y = 300;
-	testObject->pos2.z = 500;
+	testObject->pos = normalize(testObject->pos);
+	//triangle->B = normalize(triangle->B);
+	//triangle->C = normalize(triangle->C);
 
-	testObject->rad.totalRadius = 10;
-
-	testObject->col.r = 255;
-	testObject->col.g = 0;
-	testObject->col.b = 0;
-
-
-	*/
 	//Triangle stuff
 
 	//triangle->A = normalize(triangle->A);
@@ -1589,16 +1604,16 @@ void rayTrace(pixel* Im){
 			Im[i+j*screenWidth].r = calcColour.r;					
 			Im[i+j*screenWidth].g = calcColour.g;
 			Im[i+j*screenWidth].b = calcColour.b;
-		}
-		/*
+
+			//Test for objects
 			testobjectvalue = findIntersectionTestObject(camera_ray, testObject);
-			if (testobjectvalue>0){
+			if (testobjectvalue < 0){
 				Im[i+j*screenWidth].r = 255;					
 				Im[i+j*screenWidth].g = 0;
 				Im[i+j*screenWidth].b = 0;
 			}
-		*/
-		//}
+			//end test
+		}
 	}
 }
 
