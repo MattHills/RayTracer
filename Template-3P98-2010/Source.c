@@ -996,14 +996,6 @@ double calculateSpecular(double colour, Position lightRay, Position reflectionRa
 }
 
 Colour clipColour(Colour colour){
-	double total = colour.r + colour.g + colour.b;
-	double extra = total - 255 * 3;
-
-	if(extra > 0){
-		colour.r = colour.r*(colour.r/total);
-		colour.g = colour.g*(colour.g/total);
-		colour.b = colour.b*(colour.b/total);
-	}
 	if(colour.r > 255){
 		colour.r = 255;
 	}
@@ -1333,7 +1325,7 @@ void rayTrace(pixel* Im){
 			innerTemp3.z = 0;
 
 			
-			xamount = (i+0.5)/screenWidth;
+			xamount = (screenWidth - i +0.5)/screenWidth;
 			yamount = ((screenWidth-j)+0.5)/screenWidth;
 			innerTemp = multPositions(camdown, yamount - 0.5);
 			innerTemp2 = multPositions(camright, xamount - 0.5);
@@ -1376,7 +1368,7 @@ void rayTrace(pixel* Im){
 			testPlane = global.pla;
 			testTriangle = global.tri;
 
-			closestId = findClosestIntersectionPoint(camera_ray, i, j);
+			closestId = findClosestIntersectionPoint(camera_ray, xamount, yamount);
 
 			while(testSphere){
 				if(testSphere->id == closestId){
@@ -1420,7 +1412,6 @@ void rayTrace(pixel* Im){
 				calcColour.g = testSphere->col.g;
 				calcColour.b = testSphere->col.b;
 
-				//calcColour = clipColour(calcColour);
 				hitPoint = 1;
 			}
 			else if(testPlane){			
@@ -1515,18 +1506,18 @@ void rayTrace(pixel* Im){
 					hitRay.origin = rayIntersection;
 					hitRay.direction = lightSource->pos;
 
-					if(j==0 && i == 400){
-						x=0;
-					}
 					clearPath = findClearPath(hitRay, lightSource);
 
-					if(clearPath = 1){					
+					if(clearPath == 0){
+						x = 0;
+					}
+
+					if(clearPath == 1){					
 						// Diffuse Reflection Calculation
 						r2 += calculateDiffuse(origColour.r, lightVector, calcNormal, lightSource->pos, lightSource->col.r, lightSource->Is, Rd);
 						g2 += calculateDiffuse(origColour.g, lightVector, calcNormal, lightSource->pos, lightSource->col.g, lightSource->Is, Rd);
 						b2 += calculateDiffuse(origColour.b, lightVector, calcNormal, lightSource->pos, lightSource->col.b, lightSource->Is, Rd);
 						
-							
 						// Specular Calculation
 						
 						reflectionRay = getReflectionRay(campos, rayIntersection, calcNormal);
