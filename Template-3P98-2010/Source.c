@@ -1128,15 +1128,17 @@ int findClearPath(Ray hitPointVector, LightSource *lightSource, int closestId){
 	testTriangle = global.tri;
 	normalized.direction = normalize(hitPointVector.direction);
 	normalized.origin = hitPointVector.origin;
+	// Perhaps reverse the orgin/hitpoint if the light is in a different direction
 	while(testSphere){
 		if(testSphere->id != closestId){
 			intersectionT = testFindSphere(normalized, testSphere);
+			intersection.x = hitPointVector.origin.x + hitPointVector.direction.x * intersectionT;
+			intersection.y = hitPointVector.origin.y + hitPointVector.direction.y * intersectionT;
+			intersection.z = hitPointVector.origin.z + hitPointVector.direction.z * intersectionT;
 			//intersectionT = testFindSphere(hitPointVector, testSphere);
 			if(intersectionT > 0){
 				distance = sqrt(square(hitPointVector.origin.x - hitPointVector.direction.x) + square(hitPointVector.origin.y - hitPointVector.direction.y));
-				if(distance > intersectionT){
-					return 0;
-				}
+				return 0;
 			}
 		}
 		testSphere = testSphere->next;
@@ -1351,6 +1353,10 @@ void rayTrace(pixel* Im){
 			innerTemp2 = addPositions(innerTemp2, innerTemp);
 			innerTemp2 = addPositions(camdir, innerTemp2);
 			innerTemp2 = normalize(innerTemp2);
+			
+			camera_ray.origin = camera.campos;
+			camera_ray.direction = innerTemp2;
+			
 			/*cam_ray_origin = camera.campos;
 			innerTemp3 = camright;
 			innerTemp3 = multPositions(innerTemp3,(xamount-0.5));
@@ -1363,8 +1369,6 @@ void rayTrace(pixel* Im){
 			camera_ray.origin = cam_ray_origin;
 			*/
 			//camera_ray.direction = innerTemp;
-			camera_ray.origin = camera.campos;
-			camera_ray.direction = innerTemp2;
 
 			/*direction.x = p.x - camera_ray.origin.x;
 			direction.y = p.y - camera_ray.origin.y;
@@ -1534,7 +1538,7 @@ void rayTrace(pixel* Im){
 					if(j==0 && i==0){
 						x = 0;
 					}
-					if(j==400 && i==400){
+					if(j==300 && i==300){
 						x = 0;
 					}
 					if(j==380&& i==screenWidth-1){
@@ -1573,19 +1577,19 @@ void rayTrace(pixel* Im){
 				calcColour = clipColour(calcColour);
 				
 			}
-			/*
-			if(i==400){
+			
+			if(i==300){
 				calcColour.r = 255;
 				calcColour.g = 0;
 				calcColour.b = 0;
 			}
-			if(j==400){
+			if(j==300){
 				calcColour.r = 255;
 				calcColour.g = 0;
 				calcColour.b = 0;
 			}
-			*/
-
+			
+			
 			Im[i+j*screenWidth].r = calcColour.r;					
 			Im[i+j*screenWidth].g = calcColour.g;
 			Im[i+j*screenWidth].b = calcColour.b;
