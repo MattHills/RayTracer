@@ -9,6 +9,7 @@ colour r:
 colour g:
 colour b:
 transparency:
+If index of refraction : 1 for straght through, 2.42 for diamond like
 Ra (ambient surface coefficient): 0 <= Ra <= 1
 Rd (material diffuse coefficient): 0 <= Rd <= 1
 Rs (material specular reflection coefficient): 0 <= Rs <= 1
@@ -23,6 +24,7 @@ colour r:
 colour g:
 colour b:
 transparency:
+If index of refraction : 1 for straght through, 2.42 for diamond like
 Ra (ambient surface coefficient): 0 <= Ra <= 1
 Rd (material diffuse coefficient): 0 <= Rd <= 1
 Rs (material specular reflection coefficient): 0 <= Rs <= 1
@@ -43,6 +45,7 @@ colour r:
 colour g:
 colour b:
 transparency:
+If index of refraction : 1 for straght through, 2.42 for diamond like
 Ra (ambient surface coefficient): 0 <= Ra <= 1
 Rd (material diffuse coefficient): 0 <= Rd <= 1
 Rs (material specular reflection coefficient): 0 <= Rs <= 1

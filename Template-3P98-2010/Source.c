@@ -15,6 +15,7 @@ typedef struct {
 
 typedef struct MaterialEffects{
 	double trans;
+	double If;
 	double Ra;
 	double Rd;
 	double Rs;
@@ -179,6 +180,8 @@ typedef struct {
 	pixel *data;
 	pixel *tempData;
 	int idCount;
+	int currentId;
+	double prevRefra;
 } glob;
 glob global;
 
@@ -314,6 +317,8 @@ void readFile(){
 				fscanf(file, "%lf", &i);
 				s->eff.trans = i;
 				fscanf(file, "%lf", &i);
+				s->eff.If = i;
+				fscanf(file, "%lf", &i);
 				s->eff.Ra = i;
 				fscanf(file, "%lf", &i);
 				s->eff.Rd = i;
@@ -351,6 +356,8 @@ void readFile(){
 				p->col.b = i;
 				fscanf(file, "%lf", &i);
 				p->eff.trans = i;
+				fscanf(file, "%lf", &i);
+				p->eff.If = i;
 				fscanf(file, "%lf", &i);
 				p->eff.Ra = i;
 				fscanf(file, "%lf", &i);
@@ -401,6 +408,8 @@ void readFile(){
 				t->col.b = i;
 				fscanf(file, "%lf", &i);
 				t->eff.trans = i;
+				fscanf(file, "%lf", &i);
+				t->eff.If = i;
 				fscanf(file, "%lf", &i);
 				t->eff.Ra = i;
 				fscanf(file, "%lf", &i);
@@ -1048,11 +1057,11 @@ Colour clipColour(Colour colour){
 }
 
 
-Position getSphereNormal(Position sphereCenter, Position hitPoint){
+Position getSphereNormal(Sphere *sphere, Position hitPoint){
 	Position v;	
-	v.x = hitPoint.x - sphereCenter.x;
-	v.y = hitPoint.y - sphereCenter.y;
-	v.z = hitPoint.z - sphereCenter.z;	
+	v.x = (hitPoint.x - sphere->pos.x) / sphere->rad.totalRadius;
+	v.y = (hitPoint.y - sphere->pos.y) / sphere->rad.totalRadius;
+	v.z = (hitPoint.z - sphere->pos.z) / sphere->rad.totalRadius;	
 	v = normalize(v);
 	return v;
 }
@@ -1074,7 +1083,31 @@ Position getReflectionRay(Position campos, Position hitPoint, Position normal){
 	return eyeRay;
 }
 
-int findClosestIntersectionPoint(Ray cameraRay, int x, int y){
+Position calcRefraction(Position campos, Position hitPoint, Position normal, double iF){
+	Position eyeRay;
+	Position ret;
+	double dotProd, temp;
+
+	eyeRay.x = hitPoint.x - campos.x;
+	eyeRay.y = hitPoint.y - campos.y;
+	eyeRay.z = hitPoint.z - campos.z;
+	eyeRay = normalize(eyeRay);
+
+	dotProd = -dotProduct(normal, eyeRay);
+	eyeRay.x = eyeRay.x + 2 * dotProd * normal.x;
+	eyeRay.y = eyeRay.y + 2 * dotProd * normal.y;
+	eyeRay.z = eyeRay.z + 2 * dotProd * normal.z;
+
+	temp = sqrt(1 - pow(iF, 2) * (1 - pow(dotProd, 2)));
+
+	ret.x = (iF * eyeRay.x) + (iF * dotProd - temp) * normal.x;
+	ret.y = (iF * eyeRay.y) + (iF * dotProd - temp) * normal.y;
+	ret.z = (iF * eyeRay.z) + (iF * dotProd - temp) * normal.z;
+
+	return ret;
+}
+
+int findClosestIntersectionPoint(Ray cameraRay){
 	double currentClosestZ;
 	int returnId;
 	double intersectionT;
@@ -1091,7 +1124,7 @@ int findClosestIntersectionPoint(Ray cameraRay, int x, int y){
 	returnId = -1;
 	currentClosestZ = 10000000;
 
-	while(testSphere){
+	while(testSphere && testSphere->id != global.currentId){
 		intersectionT = testFindSphere(cameraRay, testSphere);		
 		if(intersectionT > 0){
 			intersectionZVal = cameraRay.origin.z + cameraRay.direction.z*intersectionT;
@@ -1102,11 +1135,7 @@ int findClosestIntersectionPoint(Ray cameraRay, int x, int y){
 		}
 		testSphere = testSphere->next;
 	}
-	//Debugging 2 planes
-	if(y>0){
-		a=0;
-	}
-	while(testPlane){
+	while(testPlane && testPlane->id != global.currentId){
 		intersectionT = findPlaneIntersection(cameraRay, testPlane);
 
 		if(intersectionT > 0){
@@ -1119,7 +1148,7 @@ int findClosestIntersectionPoint(Ray cameraRay, int x, int y){
 		testPlane = testPlane->next;
 	}
 
-	while(testTriangle){
+	while(testTriangle && testTriangle->id != global.currentId){
 		intersectionT = findTriangleIntersection(cameraRay, testTriangle);
 
 		if(intersectionT > 0){
@@ -1191,7 +1220,243 @@ int findClearPath(Ray hitPointVector, LightSource *lightSource, int closestId){
 	return 1;
 }
 
-void rayTrace(pixel* Im){
+Colour rayTrace(Ray ray){
+	Sphere *testSphere;
+	Plane *testPlane;
+	Triangle *testTriangle;
+	LightSource *lightSource;
+	Colour calcColour, origColour;
+	int closestId;
+	double intersectionT;
+	Position rayIntersection, calcNormal;
+	double r,g,b;
+	double r2,g2,b2;				
+	double Ra=0, Rd=0, Rs=0, f=0;
+	double transparency = 0, If=0;
+	int hitPoint=0;
+
+	//dlete me
+	double testobjectvalue;
+	//dlete
+	Position direction;	
+	Position planeNormal;
+	Ray reflectionRay;
+
+
+	testSphere = global.sph;
+	testPlane = global.pla;
+	testTriangle = global.tri;
+
+	closestId = findClosestIntersectionPoint(ray);
+
+	while(testSphere){
+		if(testSphere->id == closestId){
+			global.currentId = closestId;
+			break;
+		}
+		testSphere = testSphere->next;
+	}
+
+	while(testPlane){
+		if(testPlane->id == closestId){
+			global.currentId = closestId;
+			break;
+		}
+		testPlane = testPlane->next;
+	}
+
+	while(testTriangle){
+		if(testTriangle->id == closestId){
+			global.currentId = closestId;
+			break;
+		}
+		testTriangle = testTriangle->next;
+	}
+
+	if(testSphere){
+		intersectionT = testFindSphere(ray, testSphere);
+		rayIntersection.x = ray.origin.x + ray.direction.x*intersectionT;
+		rayIntersection.y = ray.origin.y + ray.direction.y*intersectionT;
+		rayIntersection.z = ray.origin.z + ray.direction.z*intersectionT;
+				
+		calcNormal = getSphereNormal(testSphere, rayIntersection);				
+
+		transparency = testSphere->eff.trans;
+		If = testSphere->eff.If;
+		Ra = testSphere->eff.Ra;
+		Rd = testSphere->eff.Rd;
+		Rs = testSphere->eff.Rs;
+		f = testSphere->eff.f;
+
+		origColour.r = testSphere->col.r;
+		origColour.g = testSphere->col.g;
+		origColour.b = testSphere->col.b;
+
+		calcColour.r = testSphere->col.r;
+		calcColour.g = testSphere->col.g;
+		calcColour.b = testSphere->col.b;
+
+		hitPoint = 1;
+	}
+	else if(testPlane){			
+		intersectionT = findPlaneIntersection(ray, testPlane);
+		rayIntersection.x = ray.origin.x + ray.direction.x*intersectionT;
+		rayIntersection.y = ray.origin.y + ray.direction.y*intersectionT;
+		rayIntersection.z = ray.origin.z + ray.direction.z*intersectionT;
+
+		calcNormal = normalize(testPlane->normal);
+
+		transparency = testPlane->eff.trans;
+		If = testPlane->eff.If;
+		Ra = testPlane->eff.Ra;
+		Rd = testPlane->eff.Rd;
+		Rs = testPlane->eff.Rs;
+		f = testPlane->eff.f;
+
+		origColour.r = testPlane->col.r;
+		origColour.g = testPlane->col.g;
+		origColour.b = testPlane->col.b;
+
+		calcColour.r = testPlane->col.r;
+		calcColour.g = testPlane->col.g;
+		calcColour.b = testPlane->col.b;
+
+		hitPoint = 1;
+	}
+	else if(testTriangle){
+		intersectionT = findTriangleIntersection(ray, testTriangle);				
+		rayIntersection.x = ray.origin.x + ray.direction.x*intersectionT;
+		rayIntersection.y = ray.origin.y + ray.direction.y*intersectionT;
+		rayIntersection.z = ray.origin.z + ray.direction.z*intersectionT;
+
+		calcNormal = getTriangleNormal(testTriangle->A,testTriangle->B,testTriangle->C);
+
+		transparency = testTriangle->eff.trans;
+		If = testTriangle->eff.If;
+		Ra = testTriangle->eff.Ra;
+		Rd = testTriangle->eff.Rd;
+		Rs = testTriangle->eff.Rs;
+		f = testTriangle->eff.f;
+
+		origColour.r = testTriangle->col.r;
+		origColour.g = testTriangle->col.g;
+		origColour.b = testTriangle->col.b;
+
+		calcColour.r = testTriangle->col.r;
+		calcColour.g = testTriangle->col.g;
+		calcColour.b = testTriangle->col.b;
+
+		hitPoint = 1;
+	}
+	else{
+		transparency = 0;
+		Ra = 0.5;
+		Rd = 0.5;
+		Rs = 0.5;
+		f = 1;
+
+		origColour.r = 0;
+		origColour.g = 0;
+		origColour.b = 0;
+
+		calcColour.r = 0;
+		calcColour.g = 0;
+		calcColour.b = 0;
+
+		hitPoint = 0;
+	}
+	if(global.lig && hitPoint == 1){
+		int clearPath = 1;
+		r = 0;
+		g = 0;
+		b = 0;
+		r2 = 0;
+		g2 = 0;
+		b2 = 0;
+		lightSource = global.lig;
+		while(lightSource){
+			Position lightVector;
+			Ray hitRay;
+			Colour traceColour;
+
+			// Get Vector normal from light source to hitpoint
+			lightVector.x = lightSource->pos.x - rayIntersection.x;
+			lightVector.y = lightSource->pos.y - rayIntersection.y;
+			lightVector.z = lightSource->pos.z - rayIntersection.z;
+			lightVector = normalize(lightVector);
+
+						
+			// Ambient Light Calculation
+			r2 = calculateAmbient(origColour.r, lightSource->col.r, lightSource->Ia, Ra);
+			g2 = calculateAmbient(origColour.g, lightSource->col.g, lightSource->Ia, Ra);
+			b2 = calculateAmbient(origColour.b, lightSource->col.b, lightSource->Ia, Ra);
+						
+			// Find if point is in shadow
+			hitRay.origin = rayIntersection;
+			hitRay.direction = lightSource->pos;
+
+			clearPath = findClearPath(hitRay, lightSource, closestId);
+
+			if(clearPath == 1){					
+				// Diffuse Reflection Calculation
+				r2 += calculateDiffuse(origColour.r, lightVector, calcNormal, lightSource->pos, lightSource->col.r, lightSource->Is, Rd);
+				g2 += calculateDiffuse(origColour.g, lightVector, calcNormal, lightSource->pos, lightSource->col.g, lightSource->Is, Rd);
+				b2 += calculateDiffuse(origColour.b, lightVector, calcNormal, lightSource->pos, lightSource->col.b, lightSource->Is, Rd);
+						
+				// Specular Calculation
+						
+				reflectionRay.origin = rayIntersection;
+				reflectionRay.direction = getReflectionRay(ray.origin, rayIntersection, calcNormal);
+				r2 += calculateSpecular(origColour.r, lightVector, reflectionRay.direction, lightSource->col.r, lightSource->Is, Rs, f);
+				g2 += calculateSpecular(origColour.g, lightVector, reflectionRay.direction, lightSource->col.g, lightSource->Is, Rs, f);
+				b2 += calculateSpecular(origColour.b, lightVector, reflectionRay.direction, lightSource->col.b, lightSource->Is, Rs, f);
+						
+				// Reflection Calculation
+
+				if(Rs > 0.5){
+					traceColour = rayTrace(reflectionRay);
+					r2 += traceColour.r;
+					g2 += traceColour.g;
+					b2 += traceColour.b;
+				}
+				
+				if(transparency == 1){
+					double n;
+					double tempPrevRefra;
+					Ray refractedRay;
+
+					n = global.prevRefra /  If;
+					refractedRay.direction = calcRefraction(ray.origin, rayIntersection, calcNormal, n);
+					refractedRay.origin = rayIntersection;
+
+					tempPrevRefra = global.prevRefra;
+					global.prevRefra = If;
+					traceColour = rayTrace(refractedRay);			
+					global.prevRefra = tempPrevRefra;
+
+					r2 += traceColour.r;
+					g2 += traceColour.g;
+					b2 += traceColour.b;
+				}
+				
+			}
+
+			r += r2;
+			g += g2;
+			b += b2;
+			lightSource = lightSource->next;
+		}
+		calcColour.r = r;
+		calcColour.g = g;
+		calcColour.b = b;
+		calcColour = clipColour(calcColour);
+				
+	}
+
+	return calcColour;
+}
+
+void startTrace(pixel* Im){
 	//Ray declaration stuff
 	int i,j,k;
 	double x,y,z;
@@ -1312,26 +1577,6 @@ void rayTrace(pixel* Im){
 	//printf("distance of triangle %lf",triangle->distance);
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){
-			//for(k=0;k<1000;k++){
-			double intersectionT;
-			double r,g,b;
-			double r2,g2,b2;						
-
-			// For lighting
-			Position calcNormal;
-			double Ra=0, Rd=0, Rs=0, f=0;
-			int hitPoint=0;
-			Colour origColour;
-
-			//dlete me
-			double testobjectvalue;
-			//dlete
-
-
-			Position p;
-			Position direction;
-			Position rayIntersection;	
-			Position planeNormal;
 			Colour calcColour;
 
 			thisone = j*screenWidth + i;
@@ -1343,10 +1588,6 @@ void rayTrace(pixel* Im){
 
 			//x = ((2*i - screenWidth)/screenWidth) * tan(fovx);
 			//y = ((2*j - screenWidth)/screenWidth) * tan(fovy);
-
-			p.x = i;
-			p.y = j;			
-			p.z = -1;
 			
 			innerTemp.x = 0;
 			innerTemp.y = 0;
@@ -1402,221 +1643,13 @@ void rayTrace(pixel* Im){
 				Im[i+j*screenWidth].g = 0;
 			}*/
 
-			testSphere = global.sph;
-			testPlane = global.pla;
-			testTriangle = global.tri;
+			global.currentId = -1;
 
-			closestId = findClosestIntersectionPoint(camera_ray, xamount, yamount);
-
-			while(testSphere){
-				if(testSphere->id == closestId){
-					break;
-				}
-				testSphere = testSphere->next;
-			}
-
-			while(testPlane){
-				if(testPlane->id == closestId){
-					break;
-				}
-				testPlane = testPlane->next;
-			}
-
-			while(testTriangle){
-				if(testTriangle->id == closestId){
-					break;
-				}
-				testTriangle = testTriangle->next;
-			}
-
-			if(testSphere){
-				intersectionT = testFindSphere(camera_ray, testSphere);
-				rayIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
-				rayIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
-				rayIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
-				
-				calcNormal = getSphereNormal(testSphere->pos, rayIntersection);				
-
-				Ra = testSphere->eff.Ra;
-				Rd = testSphere->eff.Rd;
-				Rs = testSphere->eff.Rs;
-				f = testSphere->eff.f;
-
-				origColour.r = testSphere->col.r;
-				origColour.g = testSphere->col.g;
-				origColour.b = testSphere->col.b;
-
-				calcColour.r = testSphere->col.r;
-				calcColour.g = testSphere->col.g;
-				calcColour.b = testSphere->col.b;
-
-				hitPoint = 1;
-			}
-			else if(testPlane){			
-				intersectionT = findPlaneIntersection(camera_ray, testPlane);
-				rayIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
-				rayIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
-				rayIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
-
-				calcNormal = normalize(testPlane->normal);
-
-				Ra = testPlane->eff.Ra;
-				Rd = testPlane->eff.Rd;
-				Rs = testPlane->eff.Rs;
-				f = testPlane->eff.f;
-
-				origColour.r = testPlane->col.r;
-				origColour.g = testPlane->col.g;
-				origColour.b = testPlane->col.b;
-
-				calcColour.r = testPlane->col.r;
-				calcColour.g = testPlane->col.g;
-				calcColour.b = testPlane->col.b;
-				
-				if(j==0 && i==screenWidth-1){
-					x = 0;
-				}
-
-				hitPoint = 1;
-			}
-			else if(testTriangle){
-				intersectionT = findTriangleIntersection(camera_ray, testTriangle);				
-				rayIntersection.x = camera_ray.origin.x + camera_ray.direction.x*intersectionT;
-				rayIntersection.y = camera_ray.origin.y + camera_ray.direction.y*intersectionT;
-				rayIntersection.z = camera_ray.origin.z + camera_ray.direction.z*intersectionT;
-
-				calcNormal = getTriangleNormal(testTriangle->A,testTriangle->B,testTriangle->C);
-
-				Ra = testTriangle->eff.Ra;
-				Rd = testTriangle->eff.Rd;
-				Rs = testTriangle->eff.Rs;
-				f = testTriangle->eff.f;
-
-				origColour.r = testTriangle->col.r;
-				origColour.g = testTriangle->col.g;
-				origColour.b = testTriangle->col.b;
-
-				calcColour.r = testTriangle->col.r;
-				calcColour.g = testTriangle->col.g;
-				calcColour.b = testTriangle->col.b;
-
-				hitPoint = 1;
-			}
-			else{
-				Ra = 0.5;
-				Rd = 0.5;
-				Rs = 0.5;
-				f = 1;
-
-				origColour.r = 0;
-				origColour.g = 0;
-				origColour.b = 0;
-
-				calcColour.r = 0;
-				calcColour.g = 0;
-				calcColour.b = 0;
-
-				hitPoint = 0;
-			}			
-			if(global.lig && hitPoint == 1){
-				int clearPath = 1;
-				r = 0;
-				g = 0;
-				b = 0;
-				r2 = 0;
-				g2 = 0;
-				b2 = 0;
-				lightSource = global.lig;
-				while(lightSource){
-					Position lightVector;
-					Position reflectionRay;
-					Ray hitRay;
-
-					// Get Vector normal from light source to hitpoint
-					lightVector.x = lightSource->pos.x - rayIntersection.x;
-					lightVector.y = lightSource->pos.y - rayIntersection.y;
-					lightVector.z = lightSource->pos.z - rayIntersection.z;
-					lightVector = normalize(lightVector);
-
-						
-					// Ambient Light Calculation
-					r2 = calculateAmbient(origColour.r, lightSource->col.r, lightSource->Ia, Ra);
-					g2 = calculateAmbient(origColour.g, lightSource->col.g, lightSource->Ia, Ra);
-					b2 = calculateAmbient(origColour.b, lightSource->col.b, lightSource->Ia, Ra);
-						
-					// Find if point is in shadow
-					hitRay.origin = rayIntersection;
-					hitRay.direction = lightSource->pos;
-					if(j==0 && i==screenWidth-1){
-						x = 0;
-					}
-					if(j==0 && i==0){
-						x = 0;
-					}
-					if(j==300 && i==300){
-						x = 0;
-					}
-					if(j==380&& i==screenWidth-1){
-						x = 0;
-					}
-
-					clearPath = findClearPath(hitRay, lightSource, closestId);
-
-					if(clearPath == 0){
-						x = 0;
-					}
-
-					if(clearPath == 1){					
-						// Diffuse Reflection Calculation
-						r2 += calculateDiffuse(origColour.r, lightVector, calcNormal, lightSource->pos, lightSource->col.r, lightSource->Is, Rd);
-						g2 += calculateDiffuse(origColour.g, lightVector, calcNormal, lightSource->pos, lightSource->col.g, lightSource->Is, Rd);
-						b2 += calculateDiffuse(origColour.b, lightVector, calcNormal, lightSource->pos, lightSource->col.b, lightSource->Is, Rd);
-						
-						// Specular Calculation
-						
-						reflectionRay = getReflectionRay(campos, rayIntersection, calcNormal);
-						r2 += calculateSpecular(origColour.r, lightVector, reflectionRay, lightSource->col.r, lightSource->Is, Rs, f);
-						g2 += calculateSpecular(origColour.g, lightVector, reflectionRay, lightSource->col.g, lightSource->Is, Rs, f);
-						b2 += calculateSpecular(origColour.b, lightVector, reflectionRay, lightSource->col.b, lightSource->Is, Rs, f);
-						
-					}
-
-					r += r2;
-					g += g2;
-					b += b2;
-					lightSource = lightSource->next;
-				}
-				calcColour.r = r;
-				calcColour.g = g;
-				calcColour.b = b;
-				calcColour = clipColour(calcColour);
-				
-			}
-			
-			if(i==300){
-				calcColour.r = 255;
-				calcColour.g = 0;
-				calcColour.b = 0;
-			}
-			if(j==300){
-				calcColour.r = 255;
-				calcColour.g = 0;
-				calcColour.b = 0;
-			}
-			
+			calcColour = rayTrace(camera_ray);			
 			
 			Im[i+j*screenWidth].r = calcColour.r;					
 			Im[i+j*screenWidth].g = calcColour.g;
 			Im[i+j*screenWidth].b = calcColour.b;
-
-			//Test for objects
-			testobjectvalue = findIntersectionTestObject(camera_ray, testObject);
-			if (testobjectvalue < 0){
-				Im[i+j*screenWidth].r = 255;					
-				Im[i+j*screenWidth].g = 0;
-				Im[i+j*screenWidth].b = 0;
-			}
-			//end test
 		}
 	}
 }
@@ -1633,7 +1666,7 @@ main(int argc, char **argv)
 
 	global.tempData = (pixel *)malloc((screenWidth)*(screenWidth)*sizeof(pixel *));
 	
-	rayTrace(global.data);
+	startTrace(global.data);
 	write_img("test.jpg", global.data, screenWidth, screenWidth);	
 
 }
