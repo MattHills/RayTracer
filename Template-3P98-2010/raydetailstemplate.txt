@@ -17,6 +17,11 @@ f is a specular highlight coefficient: (f>=1)
 use -55 after your shape definition for your assistance
 
 type: 1 | Plane
+Only set 1 of the x,y,z normal. Position is where the plane will be located.
+Ensure what ever norm is set, the corisponding pos is set. if x norm is set, only x pos is set
+x norm;
+y norm;
+z norm;
 x pos:
 y pos:
 z pos:
