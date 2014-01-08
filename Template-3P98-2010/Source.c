@@ -69,7 +69,7 @@ typedef struct Plane {
 	Position pos;	
 	Position norm;
 	Colour col;
-	int check;
+	double check;
 	MaterialEffects eff;
 	struct Plane *next;
 } Plane;
@@ -902,9 +902,7 @@ Colour rayTrace(Ray ray){
 
 		hitPoint = 1;
 	}
-	else if(testPlane){	
-		int square;
-
+	else if(testPlane){			
 		intersectionT = findPlaneIntersection(ray, testPlane);
 		rayIntersection.x = ray.origin.x + ray.direction.x*intersectionT;
 		rayIntersection.y = ray.origin.y + ray.direction.y*intersectionT;
@@ -920,7 +918,7 @@ Colour rayTrace(Ray ray){
 		f = testPlane->eff.f;
 
 		if(testPlane->check == 99){
-			square = (int)(rayIntersection.x/40) + (int)(rayIntersection.y/40) + (int)(rayIntersection.z/40);
+			int square = (int)(rayIntersection.x/40) + (int)(rayIntersection.y/40) + (int)(rayIntersection.z/40);
 
 			if((square % 2) ==0){
 				origColour.r = 0;
