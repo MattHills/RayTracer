@@ -1412,7 +1412,7 @@ Colour rayTrace(Ray ray){
 				b2 += calculateSpecular(origColour.b, lightVector, reflectionRay.direction, lightSource->col.b, lightSource->Is, Rs, f);
 						
 				// Reflection Calculation
-
+				
 				if(Rs > 0.5){
 					traceColour = rayTrace(reflectionRay);
 					r2 += traceColour.r;
@@ -1420,6 +1420,8 @@ Colour rayTrace(Ray ray){
 					b2 += traceColour.b;
 				}
 				
+				// Refraction Calculation
+
 				if(transparency == 1){
 					double n;
 					double tempPrevRefra;
@@ -1434,9 +1436,16 @@ Colour rayTrace(Ray ray){
 					traceColour = rayTrace(refractedRay);			
 					global.prevRefra = tempPrevRefra;
 
-					r2 += traceColour.r;
-					g2 += traceColour.g;
-					b2 += traceColour.b;
+					if(traceColour.r == 0 && traceColour.g == 0 && traceColour.b == 0){
+						r2 *= 0.4;
+						g2 *= 0.4;
+						b2 *= 0.4;
+					}
+					else{
+						r2 += traceColour.r;
+						g2 += traceColour.g;
+						b2 += traceColour.b;
+					}					
 				}
 				
 			}
