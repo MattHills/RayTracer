@@ -311,9 +311,9 @@ void readFile(){
 				fscanf(file, "%lf", &i);
 				s->col.r = i;
 				fscanf(file, "%lf", &i);
-				s->col.b = i;
-				fscanf(file, "%lf", &i);
 				s->col.g = i;
+				fscanf(file, "%lf", &i);
+				s->col.b = i;
 				fscanf(file, "%lf", &i);
 				s->eff.trans = i;
 				fscanf(file, "%lf", &i);
@@ -1430,6 +1430,7 @@ Colour rayTrace(Ray ray){
 					n = global.prevRefra /  If;
 					refractedRay.direction = calcRefraction(ray.origin, rayIntersection, calcNormal, n);
 					refractedRay.origin = rayIntersection;
+					//refractedRay.direction = negative(refractedRay.direction);
 
 					tempPrevRefra = global.prevRefra;
 					global.prevRefra = If;
