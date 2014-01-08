@@ -69,9 +69,11 @@ typedef struct Plane {
 	Position pos;	
 	Position norm;
 	Colour col;
+	int check;
 	MaterialEffects eff;
 	struct Plane *next;
 } Plane;
+
 // Sphere shape
 typedef struct Sphere {
 	int id;
@@ -82,18 +84,6 @@ typedef struct Sphere {
 	struct Sphere *next;
 } Sphere;
 
-// Cylinder shape
-/*typedef struct Cylinder{
-	int id;
-	Position pos;	
-	Size size;
-	Radius rad;	
-	Angle ang;
-	Colour col;	
-	MaterialEffects eff;
-	struct Cylinder *next;
-} Cylinder;*/
-
 //infinite clinder
 typedef struct Cylinder{
 	int id;
@@ -102,12 +92,12 @@ typedef struct Cylinder{
 	Position center;
 	Radius rad;	
 	double axis;
-	//double distance;
 	Colour col;	
 	MaterialEffects eff;
 	struct Cylinder *next;
 } Cylinder;
 
+//Triangle
 typedef struct Triangle {
 	int id;
 	Position A;
@@ -119,6 +109,7 @@ typedef struct Triangle {
 	struct Triangle *next;
 } Triangle;
 
+//Lightsource
 typedef struct LightSource{
 	int id;
 	Position pos;
@@ -149,17 +140,13 @@ typedef struct {
 glob global;
 
 
-//mag (sqrt((x*x) + (y*y) + (z*z))
-//normalize = 
-//invert negative -x,-y,-z
-//dotproduct (vector v) return 
-//crossproduct
-
+//Ray Vector
 typedef struct Ray{
 	 Position origin;
 	 Position direction;
 } Ray;
 
+//Camera struct, for o
 typedef struct Camera{
 	//Coord for scene for perspective
 	Position campos;
@@ -167,12 +154,6 @@ typedef struct Camera{
 	Position camright;
 	Position camdown;
 } Camera;
-
-/*typedef struct Color {
-	double r;
-	double g;
-	double b;
-} Color;*/
 
 typedef struct Light{
 	struct Colour c;//color
@@ -184,10 +165,10 @@ typedef struct Object{
 	double findIntersection;
 } Object;
 
-
 int screenWidth;	// size * cellSize
 
 //write_img
+//writes to test.jpg image
 void write_img(char *name, pixel *data, int width, int height) {
 	FIBITMAP *image;
 	RGBQUAD aPixel;
@@ -229,16 +210,16 @@ void reset(){
 
 // Keyboard imput
 void keyboard(unsigned char key, int x, int y) {
-
 	switch (key){
 		case 0x1B:
 		case'q':
 		case 'Q':
 			exit(0);
 			break;
-   }
+   }//Quit
 }
 
+//Read file, reads in ray details stores objects in a list
 void readFile(){
 	FILE *file;
 	double i;
@@ -247,8 +228,7 @@ void readFile(){
 	Triangle *t;
 	LightSource *l;
 
-	//file = fopen("C:\3P98\3P98 Final Project\Ray Tracer\RayTracer\raydetails.txt","r");
-	file = fopen("raydetails.txt","r");
+	file = fopen("raydetails.txt","r"); 
 
 	if(!file){
 		printf("Error when opening file");
@@ -256,7 +236,7 @@ void readFile(){
 	else{
 		fscanf(file, "%lf", &i);
 		while(!feof(file)){
-			if(i == 0){
+			if(i == 0){ //loading spheres
 				s = (Sphere*)malloc(sizeof (struct Sphere));
 				s->id = global.idCount;
 				global.idCount++;
@@ -298,7 +278,7 @@ void readFile(){
 					global.sph = s;
 				}
 			}
-			else if(i == 1){
+			else if(i == 1){ //loading planes
 				p = (Plane*)malloc(sizeof (struct Plane));
 				p->id = global.idCount;
 				global.idCount++;
@@ -320,6 +300,8 @@ void readFile(){
 				p->col.g = i;
 				fscanf(file, "%lf", &i);
 				p->col.b = i;
+				fscanf(file, "%lf", &i);
+				p->check = i;
 				fscanf(file, "%lf", &i);
 				p->eff.trans = i;
 				fscanf(file, "%lf", &i);
@@ -344,7 +326,7 @@ void readFile(){
 					global.pla = p;
 				}
 			}
-			else if(i == 2){
+			else if(i == 2){ //loading triangles
 				t = (Triangle*)malloc(sizeof (struct Triangle));
 				t->id = global.idCount;
 				global.idCount++;
@@ -396,7 +378,7 @@ void readFile(){
 					global.tri = t;
 				}
 			}
-			else if(i == 8){
+			else if(i == 8){ //loading lightsource
 				l = (LightSource*)malloc(sizeof (struct LightSource));
 				l->id = global.idCount;
 				global.idCount++;
@@ -482,6 +464,7 @@ Position addPositions(Position v, Position c){
 
 //sets Position v's coord to the new Position created
 
+//Multiply Positions, returns new position 
 Position multPositions(Position v, double scalar){
 	Position temp;
 	temp.x = v.x*scalar;
@@ -490,71 +473,8 @@ Position multPositions(Position v, double scalar){
 	return temp;
 }
 
-//double findIntersectionTestObject(Ray ray, testObj* sphere){
-	/*double a = (pow(ray.direction.x,2) + pow(ray.direction.y,2));
-	double b = 2*((ray.origin.x)*(ray.direction.x))+2*((ray.origin.y)*(ray.direction.y));
-	double c = pow(ray.origin.x, 2) + pow(ray.origin.y, 2) - 1;*/
-	
-	/*double a = (pow(ray.direction.z,2) + pow(ray.direction.y,2));
-	double b = 2*((ray.origin.z)*(ray.direction.z))+2*((ray.origin.y)*(ray.direction.y));
-	double c = pow(ray.origin.z, 2) + pow(ray.origin.y, 2) - 1;*/
-	/*double s = 1;
-
-	double a,b,c,d,f;
-
-	double disc;
-	
-	double t0;
-	double t1;
-
-	d = (s-1)*ray.direction.x;
-
-	f = 1 +(s-1)*ray.origin.z;
-
-	a = (pow(ray.direction.x,2) + pow(ray.direction.y,2) - pow(d,2));
-	b = ray.origin.x*ray.direction.x+ray.origin.y*ray.direction.y - f*d;
-	c = pow(ray.origin.x,2) + pow(ray.origin.y,2) - pow(f,2);
-
-	disc = pow((2*b),2) - 4*a*c;
-
-	//disc = pow(b,2)-4*c;
-
-	t0 = (((-1)*b-sqrt(disc))/2*a);
-	t1 = (((-1)*b+sqrt(disc))/2*a);
-
-	if (disc < 0){
-		//no intersection
-		return -1;
-	} else{
-		if (t0>0){
-			return t0;
-		} else  if (t1>0){
-			return t1;
-		}
-	}
-}*/
-
-double findIntersectionTestObject(Ray ray, testObj* cylinder){
-	double a;
-	double b;
-	double c;
-	double delta;
-
-	a = ray.direction.x* ray.direction.x + ray.direction.y * ray.direction.y;
-	b = 2 * (ray.origin.x * ray.direction.x + ray.origin.y * ray.direction.y);
-	c = (ray.origin.x * ray.origin.x + ray.origin.y * ray.origin.y) - cylinder->rad.totalRadius;
-
-	delta = b * b - (4 * a * c);
-	if (delta > 0){
-		return -1;
-	}
-	else if (delta == 0){
-		return (-b / (2 * a));
-	}
-	return 10000;
-}
-
-
+//findSphereIntersection
+//Finds the intersection of a ray and a sphere returns t0, or t1 if disc positive
 double testFindSphere (Ray ray, Sphere* sphere){
 	double a = 1;
 	double b = 2*(ray.direction.x*(ray.origin.x-sphere->pos.x)+ray.direction.y*(ray.origin.y-sphere->pos.y)+ray.direction.z*(ray.origin.z-sphere->pos.z));
@@ -581,8 +501,8 @@ double testFindSphere (Ray ray, Sphere* sphere){
 	return -1;
 }
 
-//Planes
-
+//Plane Intersection 
+//Calculates ray and plane intersection, returns t0, t1
 double findPlaneIntersection(Ray ray, Plane* plane){
 	Position planeNormal;
 	Position rayOrigin;
@@ -605,7 +525,7 @@ double findPlaneIntersection(Ray ray, Plane* plane){
 }
 
 //Triangles
-
+//Returns the normal position vector of a triangle based on ABC positions
 Position getTriangleNormal(Position A, Position B, Position C){
 	Position CA;
 	Position BA;
@@ -621,6 +541,9 @@ Position getTriangleNormal(Position A, Position B, Position C){
 	return normal;
 }//return normal of triangle
 
+
+//Returns the distance value of the dotproduct
+//of the triangle normal and point A
 double getTriangleDistance(Triangle* t){
 	double distance;
 	distance = dotProduct(t->normal, t->A);
@@ -676,12 +599,14 @@ double findTriIntersect(Ray ray,Triangle* t){
 	}
 }
 
+//Calculates ambient lighting on object
 double calculateAmbient(double colour, double lightSourceColour, double Ia, double Ra){
 	double ret;
 	ret =  Ia * Ra;
 	return colour * Ra;
 }
 
+//Calculates diffuse
 double calculateDiffuse(double colour, Position lightToHitPoint, Position hitPointNormal, Position lightSourcePos, double lightSourceColour, double Is, double Rd){
 	double a;
 
@@ -693,6 +618,7 @@ double calculateDiffuse(double colour, Position lightToHitPoint, Position hitPoi
 	return colour * (Is * Rd * a);
 }
 
+//Calculates specular lighting
 double calculateSpecular(double colour, Position lightRay, Position reflectionRay, double lightSourceColour, double Is, double Rs, double f){
 	double ret;
 
@@ -706,6 +632,7 @@ double calculateSpecular(double colour, Position lightRay, Position reflectionRa
 	return lightSourceColour * ret;
 }
 
+//ClipColour ensures colors are within color spectrum
 Colour clipColour(Colour colour){
 	colour.r = colour.r / global.numLS;
 	colour.g = colour.g /global.numLS;
@@ -732,7 +659,7 @@ Colour clipColour(Colour colour){
 	return colour;
 }
 
-
+//Returns calculated sphere's normal at hit point
 Position getSphereNormal(Sphere *sphere, Position hitPoint){
 	Position v;	
 	v.x = (hitPoint.x - sphere->pos.x) / sphere->rad.totalRadius;
@@ -742,6 +669,7 @@ Position getSphereNormal(Sphere *sphere, Position hitPoint){
 	return v;
 }
 
+//Returns calculated reflection ray
 Position getReflectionRay(Position campos, Position hitPoint, Position normal){
 	Position eyeRay;
 	double dotProd;
@@ -790,6 +718,8 @@ Position calcRefraction(Position campos, Position hitPoint, Position normal, dou
 	return ret;
 }
 
+//Determines the closests intersection point of object and ray
+//finds closest object to camera
 int findClosestIntersectionPoint(Ray cameraRay){
 	double currentClosestZ;
 	int returnId;
@@ -899,6 +829,7 @@ int findClearPath(Ray hitPointVector, LightSource *lightSource, int closestId){
 	return 1;
 }
 
+
 Colour rayTrace(Ray ray){
 	Sphere *testSphere;
 	Plane *testPlane;
@@ -971,7 +902,9 @@ Colour rayTrace(Ray ray){
 
 		hitPoint = 1;
 	}
-	else if(testPlane){			
+	else if(testPlane){	
+		int square;
+
 		intersectionT = findPlaneIntersection(ray, testPlane);
 		rayIntersection.x = ray.origin.x + ray.direction.x*intersectionT;
 		rayIntersection.y = ray.origin.y + ray.direction.y*intersectionT;
@@ -986,13 +919,37 @@ Colour rayTrace(Ray ray){
 		Rs = testPlane->eff.Rs;
 		f = testPlane->eff.f;
 
-		origColour.r = testPlane->col.r;
-		origColour.g = testPlane->col.g;
-		origColour.b = testPlane->col.b;
+		if(testPlane->check == 99){
+			square = (int)(rayIntersection.x/40) + (int)(rayIntersection.y/40) + (int)(rayIntersection.z/40);
 
-		calcColour.r = testPlane->col.r;
-		calcColour.g = testPlane->col.g;
-		calcColour.b = testPlane->col.b;
+			if((square % 2) ==0){
+				origColour.r = 0;
+				origColour.g = 0;
+				origColour.b = 0;
+
+				calcColour.r = 0;
+				calcColour.g = 0;
+				calcColour.b = 0;
+			}
+			else{
+				origColour.r = 255;
+				origColour.g = 255;
+				origColour.b = 255;
+
+				calcColour.r = 255;
+				calcColour.g = 255;
+				calcColour.b = 255;
+			}
+		}
+		else{		
+			origColour.r = testPlane->col.r;
+			origColour.g = testPlane->col.g;
+			origColour.b = testPlane->col.b;
+
+			calcColour.r = testPlane->col.r;
+			calcColour.g = testPlane->col.g;
+			calcColour.b = testPlane->col.b;		
+		}
 
 		hitPoint = 1;
 	}
@@ -1213,55 +1170,16 @@ void startTrace(pixel* Im){
 
 	aspectratio = (double)screenWidth/(double)screenWidth;
 
-	//testobj
-	
-	testObject = (testObj*)malloc(sizeof (struct testObj));
-
-	testObject->pos.x = 400;	
-	testObject->pos.y = 300;
-	testObject->pos.z = 400;
-
-	testObject->rad.totalRadius = 50;
-
-	testObject->pos = normalize(testObject->pos);
-	//triangle->B = normalize(triangle->B);
-	//triangle->C = normalize(triangle->C);
-
-	//Triangle stuff
-
-	//triangle->A = normalize(triangle->A);
-	//triangle->B = normalize(triangle->B);
-	//triangle->C = normalize(triangle->C);
-
-	//triangle->normal = getTriangleNormal(triangle->A,triangle->B,triangle->C);
-
-	//triangle->distance = getTriangleDistance(triangle);
-
-	/*printf("normal of triangle x %lf",triangle->normal.x);
-	printf("\n");
-	printf("normal of triangle y %lf",triangle->normal.y);
-	printf("\n");
-	printf("normal of triangle z %lf",triangle->normal.z);
-	printf("\n");*/
-
-	//printf("distance of triangle %lf",triangle->distance);
 	for (i = 0;i<screenWidth;i++){
 		for (j = 0;j<screenWidth;j++){
 			Colour calcColour;
 			aaColour.r = 0;
 			aaColour.g = 0;
 			aaColour.b = 0;
+			//Uncomment for Anti-aliasing
 			//for(k = 0; k < 4; k++){
 				//for(l = 0; l < 4; l++){
 					
-
-					//cam_ray_origin = camera.campos;
-					//cam_ray_direction = addPositions(camdir, multPositions(camright, xamnt - 0.5)
-
-
-
-					//x = ((2*i - screenWidth)/screenWidth) * tan(fovx);
-					//y = ((2*j - screenWidth)/screenWidth) * tan(fovy);
 			
 					innerTemp.x = 0;
 					innerTemp.y = 0;
@@ -1275,9 +1193,11 @@ void startTrace(pixel* Im){
 					innerTemp3.y = 0;
 					innerTemp3.z = 0;
 
-			
+
+					//Comment out for AA
 					xamount = (screenWidth - i +0.5)/screenWidth;
 					yamount = ((screenWidth-j)+0.5)/screenWidth;
+					//Uncomment for AA
 					//xamount = (screenWidth - i +0.5 *k/4)/screenWidth;
 					//yamount = ((screenWidth-j)+0.5 *l/4)/screenWidth;
 					innerTemp = multPositions(camdown, yamount - 0.5);
@@ -1297,12 +1217,14 @@ void startTrace(pixel* Im){
 					aaColour.g += calcColour.g;
 					aaColour.b += calcColour.b;
 			
-					
+					//Uncomment for AA
 				//}
 			//}
+			//Comment for AA
 			Im[i+j*screenWidth].r = aaColour.r;					
 			Im[i+j*screenWidth].g = aaColour.g;
 			Im[i+j*screenWidth].b = aaColour.b;
+			//Uncomment for AA
 			//Im[i+j*screenWidth].r = aaColour.r/16;					
 			//Im[i+j*screenWidth].g = aaColour.g/16;
 			//Im[i+j*screenWidth].b = aaColour.b/16;

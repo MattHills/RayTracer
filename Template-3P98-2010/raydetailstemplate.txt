@@ -28,6 +28,7 @@ z pos:
 colour r:
 colour g:
 colour b:
+Black and White Checkerboard: 99 Yes, 0 No
 transparency:
 If index of refraction : 1 for straght through, 2.42 for diamond like
 Ra (ambient surface coefficient): 0 <= Ra <= 1
